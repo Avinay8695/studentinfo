@@ -1,15 +1,25 @@
-import { Wifi } from 'lucide-react';
+import { Database, Shield } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="py-6 px-4 text-center border-t border-border mt-8">
-      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-        <Wifi className="w-4 h-4" />
-        <span>Made for local use - No Internet required</span>
+    <footer className="py-5 px-4 border-t border-border mt-8 bg-muted/30">
+      <div className="container max-w-6xl mx-auto">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <Database className="w-3.5 h-3.5" />
+              <span>Local Storage</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5" />
+              <span>Offline Ready</span>
+            </div>
+          </div>
+          <p className="text-muted-foreground/70">
+            © {new Date().getFullYear()} Student Management System
+          </p>
+        </div>
       </div>
-      <p className="text-xs text-muted-foreground/70 mt-2">
-        Data is stored securely in your browser's local storage
-      </p>
     </footer>
   );
 }

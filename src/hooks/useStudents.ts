@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Student, FeesFilter } from '@/types/student';
 
-const STORAGE_KEY = 'ragini_institute_students';
+const STORAGE_KEY = 'institute_students_data';
 
 export function useStudents() {
   const [students, setStudents] = useState<Student[]>([]);
