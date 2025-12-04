@@ -1,21 +1,25 @@
-import { Database, Shield } from 'lucide-react';
+import { Database, Shield, Sparkles } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="py-5 px-4 border-t border-border mt-8 bg-muted/30">
+    <footer className="py-6 px-4 border-t border-border mt-auto bg-card/50">
       <div className="container max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5" />
-              <span>Local Storage</span>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Database className="w-4 h-4" />
+              <span className="font-medium">Local Storage</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5" />
-              <span>Offline Ready</span>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Shield className="w-4 h-4" />
+              <span className="font-medium">Secure & Private</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Sparkles className="w-4 h-4" />
+              <span className="font-medium">Offline Ready</span>
             </div>
           </div>
-          <p className="text-muted-foreground/70">
+          <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} Student Management System
           </p>
         </div>

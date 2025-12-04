@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, RotateCcw, Save } from 'lucide-react';
+import { UserPlus, RotateCcw, Save, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface StudentFormProps {
@@ -101,37 +101,52 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
   };
 
   return (
-    <div className="bg-card rounded-lg shadow-card p-6 animate-fade-in">
-      <div className="flex items-center gap-2 mb-6">
-        <UserPlus className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-semibold text-card-foreground">
-          {editingStudent ? 'Edit Student' : 'Add New Student'}
-        </h2>
+    <div className="card-elevated p-6 animate-fade-in">
+      <div className="flex items-center gap-3 mb-6">
+        <div className={`p-2.5 rounded-xl ${editingStudent ? 'bg-accent/10' : 'bg-primary/10'}`}>
+          {editingStudent ? (
+            <Pencil className="w-5 h-5 text-accent" />
+          ) : (
+            <UserPlus className="w-5 h-5 text-primary" />
+          )}
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold text-card-foreground font-display">
+            {editingStudent ? 'Edit Student' : 'Add New Student'}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {editingStudent ? 'Update student information' : 'Fill in the details below'}
+          </p>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Full Name */}
           <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name *</Label>
+            <Label htmlFor="fullName" className="text-sm font-medium">
+              Full Name <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="fullName"
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               placeholder="Enter student's full name"
-              className={errors.fullName ? 'border-destructive' : ''}
+              className={`input-focus ${errors.fullName ? 'border-destructive focus:ring-destructive/20' : ''}`}
             />
-            {errors.fullName && <p className="text-sm text-destructive">{errors.fullName}</p>}
+            {errors.fullName && <p className="text-xs text-destructive">{errors.fullName}</p>}
           </div>
 
           {/* Course */}
           <div className="space-y-2">
-            <Label htmlFor="course">Course *</Label>
+            <Label htmlFor="course" className="text-sm font-medium">
+              Course <span className="text-destructive">*</span>
+            </Label>
             <Select
               value={formData.course}
               onValueChange={(value) => setFormData({ ...formData, course: value })}
             >
-              <SelectTrigger className={errors.course ? 'border-destructive' : ''}>
+              <SelectTrigger className={`input-focus ${errors.course ? 'border-destructive' : ''}`}>
                 <SelectValue placeholder="Select a course" />
               </SelectTrigger>
               <SelectContent>
@@ -142,23 +157,24 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
                 ))}
               </SelectContent>
             </Select>
-            {errors.course && <p className="text-sm text-destructive">{errors.course}</p>}
+            {errors.course && <p className="text-xs text-destructive">{errors.course}</p>}
           </div>
 
           {/* Batch */}
           <div className="space-y-2">
-            <Label htmlFor="batch">Batch / Year</Label>
+            <Label htmlFor="batch" className="text-sm font-medium">Batch / Year</Label>
             <Input
               id="batch"
               value={formData.batch}
               onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
               placeholder="e.g., 2025 Batch"
+              className="input-focus"
             />
           </div>
 
           {/* Fees Amount */}
           <div className="space-y-2">
-            <Label htmlFor="feesAmount">Fees Amount (₹)</Label>
+            <Label htmlFor="feesAmount" className="text-sm font-medium">Fees Amount (₹)</Label>
             <Input
               id="feesAmount"
               type="number"
@@ -166,19 +182,19 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
               value={formData.feesAmount}
               onChange={(e) => setFormData({ ...formData, feesAmount: Number(e.target.value) })}
               placeholder="Enter fees amount"
-              className={errors.feesAmount ? 'border-destructive' : ''}
+              className={`input-focus ${errors.feesAmount ? 'border-destructive' : ''}`}
             />
-            {errors.feesAmount && <p className="text-sm text-destructive">{errors.feesAmount}</p>}
+            {errors.feesAmount && <p className="text-xs text-destructive">{errors.feesAmount}</p>}
           </div>
 
           {/* Fees Status */}
           <div className="space-y-2">
-            <Label htmlFor="feesStatus">Fees Status</Label>
+            <Label htmlFor="feesStatus" className="text-sm font-medium">Fees Status</Label>
             <Select
               value={formData.feesStatus}
               onValueChange={(value: 'paid' | 'not_paid') => setFormData({ ...formData, feesStatus: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="input-focus">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -190,47 +206,60 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
 
           {/* Mobile */}
           <div className="space-y-2">
-            <Label htmlFor="mobile">Mobile Number</Label>
+            <Label htmlFor="mobile" className="text-sm font-medium">Mobile Number</Label>
             <Input
               id="mobile"
               value={formData.mobile}
               onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
               placeholder="Enter mobile number"
+              className="input-focus"
             />
           </div>
         </div>
 
-        {/* Address */}
-        <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
-          <Textarea
-            id="address"
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            placeholder="Enter address (optional)"
-            rows={2}
-          />
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Address */}
+          <div className="space-y-2">
+            <Label htmlFor="address" className="text-sm font-medium">Address</Label>
+            <Textarea
+              id="address"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Enter address (optional)"
+              rows={3}
+              className="input-focus resize-none"
+            />
+          </div>
 
-        {/* Notes */}
-        <div className="space-y-2">
-          <Label htmlFor="notes">Notes</Label>
-          <Textarea
-            id="notes"
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            placeholder="Any additional notes (optional)"
-            rows={2}
-          />
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
+            <Textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              placeholder="Any additional notes (optional)"
+              rows={3}
+              className="input-focus resize-none"
+            />
+          </div>
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-3 pt-2">
-          <Button type="submit" className="flex-1 md:flex-none">
+        <div className="flex gap-3 pt-3">
+          <Button 
+            type="submit" 
+            className="btn-glow px-6 font-medium"
+          >
             <Save className="w-4 h-4 mr-2" />
             {editingStudent ? 'Update Student' : 'Save Student'}
           </Button>
-          <Button type="button" variant="outline" onClick={handleClear}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleClear}
+            className="px-6 font-medium"
+          >
             <RotateCcw className="w-4 h-4 mr-2" />
             Clear
           </Button>

@@ -25,9 +25,9 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
-      <main className="flex-1 container max-w-6xl mx-auto px-4 py-6">
+      <main className="flex-1 container max-w-6xl mx-auto px-4 py-8">
         {/* Student Form */}
-        <div className="mb-6">
+        <div className="mb-8">
           <StudentForm
             editingStudent={editingStudent}
             onSubmit={addStudent}

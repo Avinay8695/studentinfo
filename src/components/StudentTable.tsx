@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Search, Pencil, Trash2, Users } from 'lucide-react';
+import { Search, Pencil, Trash2, Users, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface StudentTableProps {
@@ -42,29 +41,32 @@ export function StudentTable({
   };
 
   return (
-    <div className="bg-card rounded-lg shadow-card animate-fade-in" style={{ animationDelay: '0.2s' }}>
+    <div className="card-elevated animate-fade-in" style={{ animationDelay: '0.2s' }}>
       {/* Search and Filter Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-5 border-b border-border">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search by name or course..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-9"
+              className="pl-10 input-focus"
             />
           </div>
-          <Select value={feesFilter} onValueChange={(value: FeesFilter) => onFilterChange(value)}>
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Students</SelectItem>
-              <SelectItem value="paid">Fees Paid</SelectItem>
-              <SelectItem value="not_paid">Fees Pending</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground hidden sm:block" />
+            <Select value={feesFilter} onValueChange={(value: FeesFilter) => onFilterChange(value)}>
+              <SelectTrigger className="w-full sm:w-44 input-focus">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Students</SelectItem>
+                <SelectItem value="paid">Fees Paid</SelectItem>
+                <SelectItem value="not_paid">Fees Pending</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -73,40 +75,54 @@ export function StudentTable({
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">#</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead>Batch</TableHead>
-                <TableHead>Fees</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Mobile</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableHead className="w-14 font-semibold">#</TableHead>
+                <TableHead className="font-semibold">Name</TableHead>
+                <TableHead className="font-semibold">Course</TableHead>
+                <TableHead className="font-semibold">Batch</TableHead>
+                <TableHead className="font-semibold">Fees</TableHead>
+                <TableHead className="font-semibold">Status</TableHead>
+                <TableHead className="font-semibold">Mobile</TableHead>
+                <TableHead className="text-right font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {students.map((student, index) => (
-                <TableRow key={student.id} className="hover:bg-muted/50 transition-colors">
-                  <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
-                  <TableCell className="font-medium">{student.fullName}</TableCell>
-                  <TableCell>{student.course}</TableCell>
-                  <TableCell>{student.batch || '-'}</TableCell>
-                  <TableCell>{formatCurrency(student.feesAmount)}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={student.feesStatus === 'paid' ? 'default' : 'destructive'}
-                      className={
-                        student.feesStatus === 'paid'
-                          ? 'bg-success hover:bg-success/90'
-                          : ''
-                      }
-                    >
-                      {student.feesStatus === 'paid' ? 'Paid' : 'Not Paid'}
-                    </Badge>
+                <TableRow 
+                  key={student.id} 
+                  className="hover:bg-muted/50 transition-colors group"
+                >
+                  <TableCell className="font-medium text-muted-foreground">
+                    {index + 1}
                   </TableCell>
-                  <TableCell>{student.mobile || '-'}</TableCell>
+                  <TableCell className="font-semibold text-card-foreground">
+                    {student.fullName}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {student.course}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {student.batch || '—'}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {formatCurrency(student.feesAmount)}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                        student.feesStatus === 'paid'
+                          ? 'bg-success/10 text-success'
+                          : 'bg-destructive/10 text-destructive'
+                      }`}
+                    >
+                      {student.feesStatus === 'paid' ? 'Paid' : 'Pending'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {student.mobile || '—'}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -131,13 +147,17 @@ export function StudentTable({
           </Table>
         </div>
       ) : (
-        <div className="p-12 text-center">
-          <Users className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-          <p className="text-lg font-medium text-muted-foreground">No students found</p>
-          <p className="text-sm text-muted-foreground/70 mt-1">
+        <div className="p-16 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+            <Users className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <p className="text-lg font-semibold text-card-foreground font-display">
+            No students found
+          </p>
+          <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
             {searchQuery || feesFilter !== 'all'
-              ? 'Try adjusting your search or filter'
-              : 'Add your first student using the form above'}
+              ? 'Try adjusting your search or filter criteria'
+              : 'Get started by adding your first student using the form above'}
           </p>
         </div>
       )}
