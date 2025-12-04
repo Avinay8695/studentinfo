@@ -1,4 +1,4 @@
-import { Users, CheckCircle, XCircle, IndianRupee } from 'lucide-react';
+import { Users, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
 
 interface StatsCardsProps {
   stats: {
@@ -19,55 +19,68 @@ export function StatsCards({ stats }: StatsCardsProps) {
     }).format(amount);
   };
 
+  const collectionRate = stats.total > 0 
+    ? Math.round((stats.paid / stats.total) * 100) 
+    : 0;
+
+  const cards = [
+    {
+      icon: Users,
+      value: stats.total,
+      label: 'Total Students',
+      iconBg: 'bg-primary/10',
+      iconColor: 'text-primary',
+      delay: '0s',
+    },
+    {
+      icon: CheckCircle,
+      value: stats.paid,
+      label: 'Fees Paid',
+      iconBg: 'bg-success/10',
+      iconColor: 'text-success',
+      delay: '0.1s',
+    },
+    {
+      icon: XCircle,
+      value: stats.notPaid,
+      label: 'Fees Pending',
+      iconBg: 'bg-destructive/10',
+      iconColor: 'text-destructive',
+      delay: '0.2s',
+    },
+    {
+      icon: TrendingUp,
+      value: `${collectionRate}%`,
+      label: 'Collection Rate',
+      iconBg: 'bg-accent/10',
+      iconColor: 'text-accent',
+      delay: '0.3s',
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div className="bg-card rounded-lg shadow-card p-4 animate-fade-in">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Users className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-card-foreground">{stats.total}</p>
-            <p className="text-sm text-muted-foreground">Total Students</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-card rounded-lg shadow-card p-4 animate-fade-in" style={{ animationDelay: '0.05s' }}>
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-success/10 rounded-lg">
-            <CheckCircle className="w-5 h-5 text-success" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-card-foreground">{stats.paid}</p>
-            <p className="text-sm text-muted-foreground">Fees Paid</p>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {cards.map((card, index) => (
+        <div 
+          key={card.label}
+          className="card-elevated card-elevated-hover p-5 animate-fade-in"
+          style={{ animationDelay: card.delay }}
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-3xl font-bold text-card-foreground font-display">
+                {card.value}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">
+                {card.label}
+              </p>
+            </div>
+            <div className={`p-2.5 ${card.iconBg} rounded-xl`}>
+              <card.icon className={`w-5 h-5 ${card.iconColor}`} />
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="bg-card rounded-lg shadow-card p-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-destructive/10 rounded-lg">
-            <XCircle className="w-5 h-5 text-destructive" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-card-foreground">{stats.notPaid}</p>
-            <p className="text-sm text-muted-foreground">Fees Pending</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-card rounded-lg shadow-card p-4 animate-fade-in" style={{ animationDelay: '0.15s' }}>
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-accent/10 rounded-lg">
-            <IndianRupee className="w-5 h-5 text-accent" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-card-foreground">{formatCurrency(stats.paidFees)}</p>
-            <p className="text-sm text-muted-foreground">Collected</p>
-          </div>
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
