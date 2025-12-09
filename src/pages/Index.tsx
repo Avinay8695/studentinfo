@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { useStudents } from '@/hooks/useStudents';
 import { Header } from '@/components/Header';
 import { StudentForm } from '@/components/StudentForm';
 import { StatsCards } from '@/components/StatsCards';
 import { StudentTable } from '@/components/StudentTable';
 import { Footer } from '@/components/Footer';
+import { MonthlyPaymentTracker } from '@/components/MonthlyPaymentTracker';
+import { Student } from '@/types/student';
 
 const Index = () => {
   const {
@@ -17,9 +20,23 @@ const Index = () => {
     addStudent,
     updateStudent,
     deleteStudent,
+    updatePaymentStatus,
     startEditing,
     cancelEditing,
   } = useStudents();
+
+  const [selectedStudentForPayments, setSelectedStudentForPayments] = useState<Student | null>(null);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+
+  const handleViewPayments = (student: Student) => {
+    setSelectedStudentForPayments(student);
+    setIsPaymentDialogOpen(true);
+  };
+
+  const handleClosePaymentDialog = () => {
+    setIsPaymentDialogOpen(false);
+    setSelectedStudentForPayments(null);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
@@ -31,7 +48,7 @@ const Index = () => {
       <Header />
       
       <main className="flex-1 container max-w-7xl mx-auto px-4 py-10 relative z-10">
-        {/* Stats Cards - Moved above form for better overview */}
+        {/* Stats Cards */}
         <StatsCards stats={stats} />
 
         {/* Student Form */}
@@ -53,10 +70,19 @@ const Index = () => {
           onFilterChange={setFeesFilter}
           onEdit={startEditing}
           onDelete={deleteStudent}
+          onViewPayments={handleViewPayments}
         />
       </main>
 
       <Footer />
+
+      {/* Monthly Payment Tracker Dialog */}
+      <MonthlyPaymentTracker
+        student={selectedStudentForPayments}
+        isOpen={isPaymentDialogOpen}
+        onClose={handleClosePaymentDialog}
+        onUpdatePayment={updatePaymentStatus}
+      />
     </div>
   );
 };

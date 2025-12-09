@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Student } from '@/types/student';
+import { Student, MonthlyPayment } from '@/types/student';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
-import { UserPlus, RotateCcw, Save, Pencil, GraduationCap, Clock } from 'lucide-react';
+import { UserPlus, RotateCcw, Save, Pencil, GraduationCap, Clock, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { COURSES, COURSE_CATEGORIES, getCourseByName } from '@/data/courses';
+import { generateMonthlyPayments } from '@/hooks/useStudents';
+import { format } from 'date-fns';
 
 interface StudentFormProps {
   editingStudent: Student | null;
@@ -21,10 +23,14 @@ type FormData = {
   course: string;
   batch: string;
   feesAmount: number;
+  monthlyFee: number;
+  courseDuration: number;
+  enrollmentDate: string;
   feesStatus: 'paid' | 'not_paid';
   mobile: string;
   address: string;
   notes: string;
+  monthlyPayments: MonthlyPayment[];
 };
 
 const initialFormState: FormData = {
@@ -32,10 +38,14 @@ const initialFormState: FormData = {
   course: '',
   batch: '',
   feesAmount: 0,
+  monthlyFee: 0,
+  courseDuration: 0,
+  enrollmentDate: format(new Date(), 'yyyy-MM-dd'),
   feesStatus: 'not_paid',
   mobile: '',
   address: '',
   notes: '',
+  monthlyPayments: [],
 };
 
 export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: StudentFormProps) {
@@ -49,10 +59,14 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
         course: editingStudent.course,
         batch: editingStudent.batch,
         feesAmount: editingStudent.feesAmount,
+        monthlyFee: editingStudent.monthlyFee,
+        courseDuration: editingStudent.courseDuration,
+        enrollmentDate: editingStudent.enrollmentDate ? format(new Date(editingStudent.enrollmentDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
         feesStatus: editingStudent.feesStatus,
         mobile: editingStudent.mobile,
         address: editingStudent.address,
         notes: editingStudent.notes,
+        monthlyPayments: editingStudent.monthlyPayments || [],
       });
     }
   }, [editingStudent]);
@@ -69,6 +83,9 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
     if (formData.feesAmount < 0) {
       newErrors.feesAmount = 'Fees cannot be negative';
     }
+    if (!formData.enrollmentDate) {
+      newErrors.enrollmentDate = 'Enrollment date is required';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -82,11 +99,21 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
       return;
     }
 
+    // Generate monthly payments for new students
+    let submitData = { ...formData };
+    if (!editingStudent && formData.courseDuration > 0) {
+      submitData.monthlyPayments = generateMonthlyPayments(
+        formData.enrollmentDate,
+        formData.courseDuration,
+        formData.monthlyFee
+      );
+    }
+
     if (editingStudent) {
-      onUpdate(editingStudent.id, formData);
+      onUpdate(editingStudent.id, submitData);
       toast.success('Student updated successfully');
     } else {
-      onSubmit(formData);
+      onSubmit(submitData);
       toast.success('Student added successfully');
     }
     
@@ -98,6 +125,23 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
     setErrors({});
     onCancel();
   };
+
+  const handleCourseChange = (value: string) => {
+    const course = getCourseByName(value);
+    if (course) {
+      setFormData({ 
+        ...formData, 
+        course: value,
+        feesAmount: course.totalFee,
+        monthlyFee: course.monthlyFee,
+        courseDuration: course.durationMonths,
+      });
+    } else {
+      setFormData({ ...formData, course: value });
+    }
+  };
+
+  const selectedCourse = getCourseByName(formData.course);
 
   return (
     <div className="card-elevated p-6 animate-fade-in">
@@ -142,17 +186,7 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
               <GraduationCap className="w-4 h-4 text-primary" />
               Course <span className="text-destructive">*</span>
             </Label>
-            <Select
-              value={formData.course}
-              onValueChange={(value) => {
-                const course = getCourseByName(value);
-                setFormData({ 
-                  ...formData, 
-                  course: value,
-                  feesAmount: course ? course.totalFee : formData.feesAmount
-                });
-              }}
-            >
+            <Select value={formData.course} onValueChange={handleCourseChange}>
               <SelectTrigger className={`input-focus ${errors.course ? 'border-destructive' : ''}`}>
                 <SelectValue placeholder="Select a course" />
               </SelectTrigger>
@@ -178,6 +212,22 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
             {errors.course && <p className="text-xs text-destructive">{errors.course}</p>}
           </div>
 
+          {/* Enrollment Date */}
+          <div className="space-y-2">
+            <Label htmlFor="enrollmentDate" className="text-sm font-medium flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-primary" />
+              Enrollment Date <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="enrollmentDate"
+              type="date"
+              value={formData.enrollmentDate}
+              onChange={(e) => setFormData({ ...formData, enrollmentDate: e.target.value })}
+              className={`input-focus ${errors.enrollmentDate ? 'border-destructive' : ''}`}
+            />
+            {errors.enrollmentDate && <p className="text-xs text-destructive">{errors.enrollmentDate}</p>}
+          </div>
+
           {/* Batch */}
           <div className="space-y-2">
             <Label htmlFor="batch" className="text-sm font-medium">Batch / Year</Label>
@@ -190,37 +240,26 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
             />
           </div>
 
-          {/* Fees Amount */}
-          <div className="space-y-2">
-            <Label htmlFor="feesAmount" className="text-sm font-medium">Fees Amount (₹)</Label>
-            <Input
-              id="feesAmount"
-              type="number"
-              min="0"
-              value={formData.feesAmount}
-              onChange={(e) => setFormData({ ...formData, feesAmount: Number(e.target.value) })}
-              placeholder="Enter fees amount"
-              className={`input-focus ${errors.feesAmount ? 'border-destructive' : ''}`}
-            />
-            {errors.feesAmount && <p className="text-xs text-destructive">{errors.feesAmount}</p>}
-          </div>
-
-          {/* Fees Status */}
-          <div className="space-y-2">
-            <Label htmlFor="feesStatus" className="text-sm font-medium">Fees Status</Label>
-            <Select
-              value={formData.feesStatus}
-              onValueChange={(value: 'paid' | 'not_paid') => setFormData({ ...formData, feesStatus: value })}
-            >
-              <SelectTrigger className="input-focus">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="not_paid">Not Paid</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Course Info - Read Only */}
+          {selectedCourse && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Course Details</Label>
+              <div className="p-3 bg-primary/5 rounded-lg border border-primary/10 text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Duration:</span>
+                  <span className="font-medium">{selectedCourse.durationMonths} months</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Monthly Fee:</span>
+                  <span className="font-medium">₹{selectedCourse.monthlyFee}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Fee:</span>
+                  <span className="font-semibold text-primary">₹{selectedCourse.totalFee}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Mobile */}
           <div className="space-y-2">

@@ -1,7 +1,31 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Student, FeesFilter } from '@/types/student';
+import { Student, FeesFilter, MonthlyPayment } from '@/types/student';
 
 const STORAGE_KEY = 'institute_students_data';
+
+// Helper to generate monthly payments based on enrollment date and duration
+export function generateMonthlyPayments(
+  enrollmentDate: string,
+  durationMonths: number,
+  monthlyFee: number
+): MonthlyPayment[] {
+  const payments: MonthlyPayment[] = [];
+  const startDate = new Date(enrollmentDate);
+  
+  for (let i = 0; i < durationMonths; i++) {
+    const paymentDate = new Date(startDate);
+    paymentDate.setMonth(paymentDate.getMonth() + i);
+    
+    payments.push({
+      month: paymentDate.getMonth(),
+      year: paymentDate.getFullYear(),
+      amount: monthlyFee,
+      isPaid: false,
+    });
+  }
+  
+  return payments;
+}
 
 export function useStudents() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -15,7 +39,15 @@ export function useStudents() {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        setStudents(parsed);
+        // Migrate old data format to new format with monthly payments
+        const migrated = parsed.map((student: any) => ({
+          ...student,
+          monthlyPayments: student.monthlyPayments || [],
+          monthlyFee: student.monthlyFee || 0,
+          courseDuration: student.courseDuration || 0,
+          enrollmentDate: student.enrollmentDate || student.createdAt,
+        }));
+        setStudents(migrated);
       } catch (e) {
         console.error('Failed to parse students from localStorage');
       }
@@ -56,6 +88,37 @@ export function useStudents() {
     saveToStorage(updated);
   }, [students, saveToStorage]);
 
+  // Update monthly payment status
+  const updatePaymentStatus = useCallback((
+    studentId: string, 
+    paymentIndex: number, 
+    isPaid: boolean
+  ) => {
+    const updated = students.map(s => {
+      if (s.id !== studentId) return s;
+      
+      const updatedPayments = [...s.monthlyPayments];
+      updatedPayments[paymentIndex] = {
+        ...updatedPayments[paymentIndex],
+        isPaid,
+        paidDate: isPaid ? new Date().toISOString() : undefined,
+      };
+      
+      // Recalculate overall fees status
+      const allPaid = updatedPayments.every(p => p.isPaid);
+      
+      return {
+        ...s,
+        monthlyPayments: updatedPayments,
+        feesStatus: allPaid ? 'paid' as const : 'not_paid' as const,
+        updatedAt: new Date().toISOString(),
+      };
+    });
+    
+    setStudents(updated);
+    saveToStorage(updated);
+  }, [students, saveToStorage]);
+
   const startEditing = useCallback((student: Student) => {
     setEditingStudent(student);
   }, []);
@@ -82,7 +145,10 @@ export function useStudents() {
     paid: students.filter(s => s.feesStatus === 'paid').length,
     notPaid: students.filter(s => s.feesStatus === 'not_paid').length,
     totalFees: students.reduce((sum, s) => sum + s.feesAmount, 0),
-    paidFees: students.filter(s => s.feesStatus === 'paid').reduce((sum, s) => sum + s.feesAmount, 0),
+    paidFees: students.reduce((sum, s) => {
+      const paidMonths = s.monthlyPayments?.filter(p => p.isPaid) || [];
+      return sum + paidMonths.reduce((pSum, p) => pSum + p.amount, 0);
+    }, 0),
   };
 
   return {
@@ -97,6 +163,7 @@ export function useStudents() {
     addStudent,
     updateStudent,
     deleteStudent,
+    updatePaymentStatus,
     startEditing,
     cancelEditing,
   };
