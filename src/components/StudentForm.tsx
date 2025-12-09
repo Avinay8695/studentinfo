@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, RotateCcw, Save, Pencil } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
+import { UserPlus, RotateCcw, Save, Pencil, GraduationCap, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { COURSES, COURSE_CATEGORIES, getCourseByName } from '@/data/courses';
 
 interface StudentFormProps {
   editingStudent: Student | null;
@@ -14,8 +15,6 @@ interface StudentFormProps {
   onUpdate: (id: string, data: Omit<Student, 'id' | 'createdAt' | 'updatedAt'>) => void;
   onCancel: () => void;
 }
-
-const COURSES = ['Basic Computer', 'Tally', 'Programming', 'MS Office', 'Web Development', 'Data Entry'];
 
 type FormData = {
   fullName: string;
@@ -139,21 +138,40 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
 
           {/* Course */}
           <div className="space-y-2">
-            <Label htmlFor="course" className="text-sm font-medium">
+            <Label htmlFor="course" className="text-sm font-medium flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-primary" />
               Course <span className="text-destructive">*</span>
             </Label>
             <Select
               value={formData.course}
-              onValueChange={(value) => setFormData({ ...formData, course: value })}
+              onValueChange={(value) => {
+                const course = getCourseByName(value);
+                setFormData({ 
+                  ...formData, 
+                  course: value,
+                  feesAmount: course ? course.totalFee : formData.feesAmount
+                });
+              }}
             >
               <SelectTrigger className={`input-focus ${errors.course ? 'border-destructive' : ''}`}>
                 <SelectValue placeholder="Select a course" />
               </SelectTrigger>
-              <SelectContent>
-                {COURSES.map((course) => (
-                  <SelectItem key={course} value={course}>
-                    {course}
-                  </SelectItem>
+              <SelectContent className="max-h-[300px]">
+                {COURSE_CATEGORIES.map((category) => (
+                  <SelectGroup key={category}>
+                    <SelectLabel className="text-xs font-semibold text-primary px-2 py-1.5 bg-primary/5">{category}</SelectLabel>
+                    {COURSES.filter(c => c.category === category).map((course) => (
+                      <SelectItem key={course.name} value={course.name} className="pl-4">
+                        <div className="flex items-center justify-between w-full gap-4">
+                          <span>{course.name}</span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {course.duration}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
