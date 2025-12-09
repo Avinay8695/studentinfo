@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Pencil, Trash2, Users, Filter } from 'lucide-react';
+import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface StudentTableProps {
@@ -41,29 +41,42 @@ export function StudentTable({
   };
 
   return (
-    <div className="card-elevated animate-fade-in" style={{ animationDelay: '0.2s' }}>
-      {/* Search and Filter Header */}
-      <div className="p-5 border-b border-border">
-        <div className="flex flex-col sm:flex-row gap-4">
+    <div className="card-elevated animate-fade-in overflow-hidden" style={{ animationDelay: '0.2s' }}>
+      {/* Header */}
+      <div className="p-5 border-b border-border bg-gradient-to-r from-primary/5 to-accent/5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-primary/10 rounded-xl">
+              <TableIcon className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-card-foreground font-display">Student Records</h3>
+              <p className="text-sm text-muted-foreground">{students.length} student{students.length !== 1 ? 's' : ''} found</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Search and Filter */}
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search by name or course..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 input-focus"
+              className="pl-10 input-focus bg-background/80"
             />
           </div>
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-muted-foreground hidden sm:block" />
             <Select value={feesFilter} onValueChange={(value: FeesFilter) => onFilterChange(value)}>
-              <SelectTrigger className="w-full sm:w-44 input-focus">
+              <SelectTrigger className="w-full sm:w-48 input-focus bg-background/80">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Students</SelectItem>
-                <SelectItem value="paid">Fees Paid</SelectItem>
-                <SelectItem value="not_paid">Fees Pending</SelectItem>
+                <SelectItem value="paid">✅ Fees Paid</SelectItem>
+                <SelectItem value="not_paid">⏳ Fees Pending</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -75,59 +88,68 @@ export function StudentTable({
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30 hover:bg-muted/30">
-                <TableHead className="w-14 font-semibold">#</TableHead>
-                <TableHead className="font-semibold">Name</TableHead>
-                <TableHead className="font-semibold">Course</TableHead>
-                <TableHead className="font-semibold">Batch</TableHead>
-                <TableHead className="font-semibold">Fees</TableHead>
-                <TableHead className="font-semibold">Status</TableHead>
-                <TableHead className="font-semibold">Mobile</TableHead>
-                <TableHead className="text-right font-semibold">Actions</TableHead>
+              <TableRow className="bg-muted/40 hover:bg-muted/40 border-b-2 border-border">
+                <TableHead className="w-14 font-bold text-card-foreground">#</TableHead>
+                <TableHead className="font-bold text-card-foreground">Name</TableHead>
+                <TableHead className="font-bold text-card-foreground">Course</TableHead>
+                <TableHead className="font-bold text-card-foreground">Batch</TableHead>
+                <TableHead className="font-bold text-card-foreground">Fees</TableHead>
+                <TableHead className="font-bold text-card-foreground">Status</TableHead>
+                <TableHead className="font-bold text-card-foreground">Mobile</TableHead>
+                <TableHead className="text-right font-bold text-card-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {students.map((student, index) => (
                 <TableRow 
                   key={student.id} 
-                  className="hover:bg-muted/50 transition-colors group"
+                  className="hover:bg-primary/5 transition-colors group border-b border-border/50"
                 >
-                  <TableCell className="font-medium text-muted-foreground">
-                    {index + 1}
+                  <TableCell className="font-bold text-primary">
+                    {String(index + 1).padStart(2, '0')}
                   </TableCell>
-                  <TableCell className="font-semibold text-card-foreground">
-                    {student.fullName}
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-sm shadow-md">
+                        {student.fullName.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="font-semibold text-card-foreground">{student.fullName}</span>
+                    </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {student.course}
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4 text-primary" />
+                      <span className="text-muted-foreground text-sm">{student.course}</span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {student.batch || '—'}
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-semibold text-card-foreground">
                     {formatCurrency(student.feesAmount)}
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm ${
                         student.feesStatus === 'paid'
-                          ? 'bg-success/10 text-success'
-                          : 'bg-destructive/10 text-destructive'
+                          ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 text-emerald-700 border border-emerald-500/30'
+                          : 'bg-gradient-to-r from-rose-500/20 to-rose-600/20 text-rose-700 border border-rose-500/30'
                       }`}
                     >
+                      <span className={`w-1.5 h-1.5 rounded-full ${student.feesStatus === 'paid' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                       {student.feesStatus === 'paid' ? 'Paid' : 'Pending'}
                     </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-muted-foreground font-medium">
                     {student.mobile || '—'}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex justify-end gap-1.5">
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => onEdit(student)}
-                        className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                        className="h-9 w-9 text-primary hover:text-primary hover:bg-primary/15 rounded-xl transition-all hover:scale-105"
                       >
                         <Pencil className="w-4 h-4" />
                       </Button>
@@ -135,7 +157,7 @@ export function StudentTable({
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDelete(student)}
-                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/15 rounded-xl transition-all hover:scale-105"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -147,11 +169,11 @@ export function StudentTable({
           </Table>
         </div>
       ) : (
-        <div className="p-16 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-            <Users className="w-8 h-8 text-muted-foreground" />
+        <div className="p-20 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 mb-5 animate-float">
+            <Users className="w-10 h-10 text-primary" />
           </div>
-          <p className="text-lg font-semibold text-card-foreground font-display">
+          <p className="text-xl font-bold text-card-foreground font-display">
             No students found
           </p>
           <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
