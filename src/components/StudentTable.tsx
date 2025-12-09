@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap } from 'lucide-react';
+import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap, Calendar, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface StudentTableProps {
@@ -14,6 +14,7 @@ interface StudentTableProps {
   onFilterChange: (filter: FeesFilter) => void;
   onEdit: (student: Student) => void;
   onDelete: (id: string) => void;
+  onViewPayments: (student: Student) => void;
 }
 
 export function StudentTable({
@@ -24,6 +25,7 @@ export function StudentTable({
   onFilterChange,
   onEdit,
   onDelete,
+  onViewPayments,
 }: StudentTableProps) {
   const handleDelete = (student: Student) => {
     if (window.confirm(`Are you sure you want to delete "${student.fullName}"?`)) {
@@ -94,77 +96,103 @@ export function StudentTable({
                 <TableHead className="font-bold text-card-foreground">Course</TableHead>
                 <TableHead className="font-bold text-card-foreground">Batch</TableHead>
                 <TableHead className="font-bold text-card-foreground">Fees</TableHead>
-                <TableHead className="font-bold text-card-foreground">Status</TableHead>
+                <TableHead className="font-bold text-card-foreground">Payment Progress</TableHead>
                 <TableHead className="font-bold text-card-foreground">Mobile</TableHead>
                 <TableHead className="text-right font-bold text-card-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.map((student, index) => (
-                <TableRow 
-                  key={student.id} 
-                  className="hover:bg-primary/5 transition-colors group border-b border-border/50"
-                >
-                  <TableCell className="font-bold text-primary">
-                    {String(index + 1).padStart(2, '0')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-sm shadow-md">
-                        {student.fullName.charAt(0).toUpperCase()}
+              {students.map((student, index) => {
+                const payments = student.monthlyPayments || [];
+                const paidCount = payments.filter(p => p.isPaid).length;
+                const totalMonths = payments.length;
+                const progressPercent = totalMonths > 0 ? (paidCount / totalMonths) * 100 : 0;
+                
+                return (
+                  <TableRow 
+                    key={student.id} 
+                    className="hover:bg-primary/5 transition-colors group border-b border-border/50"
+                  >
+                    <TableCell className="font-bold text-primary">
+                      {String(index + 1).padStart(2, '0')}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-sm shadow-md">
+                          {student.fullName.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-semibold text-card-foreground">{student.fullName}</span>
                       </div>
-                      <span className="font-semibold text-card-foreground">{student.fullName}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <GraduationCap className="w-4 h-4 text-primary" />
-                      <span className="text-muted-foreground text-sm">{student.course}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {student.batch || '—'}
-                  </TableCell>
-                  <TableCell className="font-semibold text-card-foreground">
-                    {formatCurrency(student.feesAmount)}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm ${
-                        student.feesStatus === 'paid'
-                          ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 text-emerald-700 border border-emerald-500/30'
-                          : 'bg-gradient-to-r from-rose-500/20 to-rose-600/20 text-rose-700 border border-rose-500/30'
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${student.feesStatus === 'paid' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                      {student.feesStatus === 'paid' ? 'Paid' : 'Pending'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground font-medium">
-                    {student.mobile || '—'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1.5">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit(student)}
-                        className="h-9 w-9 text-primary hover:text-primary hover:bg-primary/15 rounded-xl transition-all hover:scale-105"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(student)}
-                        className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/15 rounded-xl transition-all hover:scale-105"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <GraduationCap className="w-4 h-4 text-primary" />
+                        <span className="text-muted-foreground text-sm">{student.course}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {student.batch || '—'}
+                    </TableCell>
+                    <TableCell className="font-semibold text-card-foreground">
+                      {formatCurrency(student.feesAmount)}
+                    </TableCell>
+                    <TableCell>
+                      {totalMonths > 0 ? (
+                        <div className="min-w-[120px]">
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="text-muted-foreground">{paidCount}/{totalMonths} months</span>
+                            <span className={`font-bold ${progressPercent === 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                              {Math.round(progressPercent)}%
+                            </span>
+                          </div>
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full transition-all ${progressPercent === 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-primary to-accent'}`}
+                              style={{ width: `${progressPercent}%` }}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No schedule</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground font-medium">
+                      {student.mobile || '—'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onViewPayments(student)}
+                          className="h-9 w-9 text-violet-600 hover:text-violet-700 hover:bg-violet-500/15 rounded-xl transition-all hover:scale-105"
+                          title="View Payments"
+                        >
+                          <CreditCard className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(student)}
+                          className="h-9 w-9 text-primary hover:text-primary hover:bg-primary/15 rounded-xl transition-all hover:scale-105"
+                          title="Edit Student"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(student)}
+                          className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/15 rounded-xl transition-all hover:scale-105"
+                          title="Delete Student"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
