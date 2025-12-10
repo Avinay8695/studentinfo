@@ -1,5 +1,5 @@
 import { Student, MonthlyPayment } from '@/types/student';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Check, X, Calendar, IndianRupee, User, GraduationCap, Clock } from 'lucide-react';
 import { format } from 'date-fns';
@@ -53,6 +53,9 @@ export function MonthlyPaymentTracker({
             </div>
             Monthly Payment Tracker
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Track and manage monthly payments for {student.fullName}
+          </DialogDescription>
         </DialogHeader>
         
         {/* Student Info Card */}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStudents } from '@/hooks/useStudents';
 import { Header } from '@/components/Header';
 import { StudentForm } from '@/components/StudentForm';
@@ -11,6 +11,7 @@ import { Student } from '@/types/student';
 const Index = () => {
   const {
     students,
+    allStudents,
     stats,
     searchQuery,
     setSearchQuery,
@@ -25,17 +26,22 @@ const Index = () => {
     cancelEditing,
   } = useStudents();
 
-  const [selectedStudentForPayments, setSelectedStudentForPayments] = useState<Student | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
+  // Get the latest student data from allStudents - this ensures instant updates
+  const selectedStudentForPayments = selectedStudentId 
+    ? allStudents.find(s => s.id === selectedStudentId) || null
+    : null;
+
   const handleViewPayments = (student: Student) => {
-    setSelectedStudentForPayments(student);
+    setSelectedStudentId(student.id);
     setIsPaymentDialogOpen(true);
   };
 
   const handleClosePaymentDialog = () => {
     setIsPaymentDialogOpen(false);
-    setSelectedStudentForPayments(null);
+    setSelectedStudentId(null);
   };
 
   return (

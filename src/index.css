@@ -214,8 +214,8 @@
   }
 
   .pattern-dots {
-    background-image: radial-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
+    background-image: radial-gradient(hsl(var(--primary) / 0.08) 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
   }
 
   .shine-effect {
@@ -243,6 +243,40 @@
   @keyframes shine {
     0% { transform: translateX(-100%) rotate(45deg); }
     100% { transform: translateX(100%) rotate(45deg); }
+  }
+
+  /* Enhanced payment status badges */
+  .payment-paid {
+    @apply bg-emerald-500/10 border-emerald-500/30 text-emerald-600;
+  }
+
+  .payment-pending {
+    @apply bg-rose-500/10 border-rose-500/30 text-rose-600;
+  }
+
+  /* Smooth transitions for theme switch */
+  * {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
   }
 }
 
