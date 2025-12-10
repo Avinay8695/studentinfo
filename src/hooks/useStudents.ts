@@ -139,12 +139,16 @@ export function useStudents() {
     return matchesSearch && matchesFilter;
   });
 
-  // Statistics
+  // Statistics - calculate both totalFees and paidFees from monthlyPayments for consistency
   const stats = {
     total: students.length,
     paid: students.filter(s => s.feesStatus === 'paid').length,
     notPaid: students.filter(s => s.feesStatus === 'not_paid').length,
-    totalFees: students.reduce((sum, s) => sum + s.feesAmount, 0),
+    totalFees: students.reduce((sum, s) => {
+      // Use sum of monthly payments if available, otherwise fall back to feesAmount
+      const monthlyTotal = s.monthlyPayments?.reduce((pSum, p) => pSum + p.amount, 0) || 0;
+      return sum + (monthlyTotal > 0 ? monthlyTotal : s.feesAmount);
+    }, 0),
     paidFees: students.reduce((sum, s) => {
       const paidMonths = s.monthlyPayments?.filter(p => p.isPaid) || [];
       return sum + paidMonths.reduce((pSum, p) => pSum + p.amount, 0);
