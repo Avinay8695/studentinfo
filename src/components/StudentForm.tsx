@@ -99,13 +99,13 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
       return;
     }
 
-    // Generate monthly payments for new students
+    // Generate monthly payments for new students using total fee
     let submitData = { ...formData };
     if (!editingStudent && formData.courseDuration > 0) {
       submitData.monthlyPayments = generateMonthlyPayments(
         formData.enrollmentDate,
         formData.courseDuration,
-        formData.monthlyFee
+        formData.feesAmount // Use total fee instead of monthly fee
       );
     }
 
