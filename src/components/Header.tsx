@@ -1,4 +1,5 @@
 import { GraduationCap, Sparkles } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Header() {
   return (
@@ -42,9 +43,13 @@ export function Header() {
               <p className="text-sm font-semibold">Admin Dashboard</p>
             </div>
             <div className="h-10 w-px bg-white/20" />
+            <ThemeToggle />
             <div className="px-5 py-2.5 bg-white/15 rounded-xl backdrop-blur-sm border border-white/25 text-sm font-semibold shadow-lg hover:bg-white/20 transition-all cursor-pointer">
               Dashboard
             </div>
+          </div>
+          <div className="md:hidden">
+            <ThemeToggle />
           </div>
         </div>
       </div>
