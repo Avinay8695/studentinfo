@@ -3,23 +3,30 @@ import { Student, FeesFilter, MonthlyPayment } from '@/types/student';
 
 const STORAGE_KEY = 'institute_students_data';
 
-// Helper to generate monthly payments based on enrollment date and duration
+// Helper to generate monthly payments based on enrollment date, duration, and total fee
 export function generateMonthlyPayments(
   enrollmentDate: string,
   durationMonths: number,
-  monthlyFee: number
+  totalFee: number
 ): MonthlyPayment[] {
   const payments: MonthlyPayment[] = [];
   const startDate = new Date(enrollmentDate);
+  
+  // Calculate base monthly fee and remainder
+  const baseMonthlyFee = Math.floor(totalFee / durationMonths);
+  const remainder = totalFee - (baseMonthlyFee * durationMonths);
   
   for (let i = 0; i < durationMonths; i++) {
     const paymentDate = new Date(startDate);
     paymentDate.setMonth(paymentDate.getMonth() + i);
     
+    // Add remainder to the last payment
+    const amount = i === durationMonths - 1 ? baseMonthlyFee + remainder : baseMonthlyFee;
+    
     payments.push({
       month: paymentDate.getMonth(),
       year: paymentDate.getFullYear(),
-      amount: monthlyFee,
+      amount,
       isPaid: false,
     });
   }
