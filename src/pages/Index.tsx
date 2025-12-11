@@ -1,18 +1,26 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStudents } from '@/hooks/useStudents';
+import { useAuth } from '@/hooks/useAuth';
 import { Header } from '@/components/Header';
 import { StudentForm } from '@/components/StudentForm';
 import { StatsCards } from '@/components/StatsCards';
 import { StudentTable } from '@/components/StudentTable';
 import { Footer } from '@/components/Footer';
 import { MonthlyPaymentTracker } from '@/components/MonthlyPaymentTracker';
+import { ExportButton } from '@/components/ExportButton';
 import { Student } from '@/types/student';
+import { Loader2 } from 'lucide-react';
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, loading: authLoading, user, role } = useAuth();
+  
   const {
     students,
     allStudents,
     stats,
+    loading: studentsLoading,
     searchQuery,
     setSearchQuery,
     feesFilter,
@@ -29,6 +37,13 @@ const Index = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/auth', { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+
   // Get the latest student data from allStudents - this ensures instant updates
   const selectedStudentForPayments = selectedStudentId 
     ? allStudents.find(s => s.id === selectedStudentId) || null
@@ -44,6 +59,23 @@ const Index = () => {
     setSelectedStudentId(null);
   };
 
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
       {/* Background pattern */}
@@ -54,8 +86,15 @@ const Index = () => {
       <Header />
       
       <main className="flex-1 container max-w-7xl mx-auto px-4 py-10 relative z-10">
-        {/* Stats Cards */}
-        <StatsCards stats={stats} />
+        {/* Stats Cards with Export Button */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+          <div className="flex-1">
+            <StatsCards stats={stats} />
+          </div>
+          <div className="flex justify-end sm:mt-0">
+            <ExportButton students={allStudents} />
+          </div>
+        </div>
 
         {/* Student Form */}
         <div className="mb-8">
@@ -68,16 +107,23 @@ const Index = () => {
         </div>
 
         {/* Student Table */}
-        <StudentTable
-          students={students}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          feesFilter={feesFilter}
-          onFilterChange={setFeesFilter}
-          onEdit={startEditing}
-          onDelete={deleteStudent}
-          onViewPayments={handleViewPayments}
-        />
+        {studentsLoading ? (
+          <div className="card-elevated p-20 text-center">
+            <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading students...</p>
+          </div>
+        ) : (
+          <StudentTable
+            students={students}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            feesFilter={feesFilter}
+            onFilterChange={setFeesFilter}
+            onEdit={startEditing}
+            onDelete={deleteStudent}
+            onViewPayments={handleViewPayments}
+          />
+        )}
       </main>
 
       <Footer />
