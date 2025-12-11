@@ -1,7 +1,31 @@
-import { GraduationCap, Sparkles } from 'lucide-react';
+import { GraduationCap, Sparkles, LogOut, User, Shield } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export function Header() {
+  const { user, role, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast.error('Failed to sign out');
+    } else {
+      toast.success('Signed out successfully');
+      navigate('/auth', { replace: true });
+    }
+  };
+
   return (
     <header className="gradient-primary text-primary-foreground py-6 sm:py-8 px-4 shadow-2xl relative overflow-hidden">
       {/* Animated background elements */}
@@ -45,8 +69,10 @@ export function Header() {
             {/* Desktop only info */}
             <div className="hidden lg:flex items-center gap-4">
               <div className="text-right mr-2">
-                <p className="text-xs text-primary-foreground/60 uppercase tracking-wider">Welcome to</p>
-                <p className="text-sm font-semibold">Admin Dashboard</p>
+                <p className="text-xs text-primary-foreground/60 uppercase tracking-wider">Welcome</p>
+                <p className="text-sm font-semibold truncate max-w-[150px]">
+                  {user?.email?.split('@')[0] || 'User'}
+                </p>
               </div>
               <div className="h-10 w-px bg-white/20" />
             </div>
@@ -54,10 +80,46 @@ export function Header() {
             {/* Theme Toggle - Always visible */}
             <ThemeToggle />
             
-            {/* Dashboard Button - Hidden on small mobile */}
-            <div className="hidden sm:block px-3 sm:px-5 py-2 sm:py-2.5 bg-white/15 rounded-lg sm:rounded-xl backdrop-blur-sm border border-white/25 text-xs sm:text-sm font-semibold shadow-lg hover:bg-white/20 transition-all cursor-pointer">
-              Dashboard
-            </div>
+            {/* User Menu */}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="relative px-3 sm:px-4 py-2 sm:py-2.5 bg-white/15 rounded-lg sm:rounded-xl backdrop-blur-sm border border-white/25 text-xs sm:text-sm font-semibold shadow-lg hover:bg-white/25 transition-all text-primary-foreground"
+                  >
+                    <User className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Account</span>
+                    {isAdmin && (
+                      <Shield className="w-3 h-3 ml-1 text-yellow-300" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-3 py-2">
+                    <p className="text-sm font-medium">{user.email}</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                      {isAdmin ? (
+                        <>
+                          <Shield className="w-3 h-3 text-primary" />
+                          Administrator
+                        </>
+                      ) : (
+                        'User'
+                      )}
+                    </p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleSignOut}
+                    className="text-destructive cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>
