@@ -8,6 +8,7 @@ interface AuthState {
   user: User | null;
   session: Session | null;
   role: AppRole | null;
+  fullName: string | null;
   loading: boolean;
 }
 
@@ -16,6 +17,7 @@ export function useAuth() {
     user: null,
     session: null,
     role: null,
+    fullName: null,
     loading: true,
   });
 
@@ -29,13 +31,13 @@ export function useAuth() {
           user: session?.user ?? null,
         }));
         
-        // Fetch role after auth state change
+        // Fetch role and profile after auth state change
         if (session?.user) {
           setTimeout(() => {
-            fetchUserRole(session.user.id);
+            fetchUserData(session.user.id);
           }, 0);
         } else {
-          setState(prev => ({ ...prev, role: null, loading: false }));
+          setState(prev => ({ ...prev, role: null, fullName: null, loading: false }));
         }
       }
     );
@@ -49,7 +51,7 @@ export function useAuth() {
       }));
       
       if (session?.user) {
-        fetchUserRole(session.user.id);
+        fetchUserData(session.user.id);
       } else {
         setState(prev => ({ ...prev, loading: false }));
       }
@@ -58,28 +60,38 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserData = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
+      // Fetch both role and profile in parallel
+      const [roleResult, profileResult] = await Promise.all([
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .maybeSingle(),
+        supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', userId)
+          .maybeSingle()
+      ]);
 
-      if (error) {
-        console.error('Error fetching user role:', error);
-        setState(prev => ({ ...prev, role: 'user', loading: false }));
-        return;
+      if (roleResult.error) {
+        console.error('Error fetching user role:', roleResult.error);
+      }
+      if (profileResult.error) {
+        console.error('Error fetching profile:', profileResult.error);
       }
 
       setState(prev => ({
         ...prev,
-        role: (data?.role as AppRole) || 'user',
+        role: (roleResult.data?.role as AppRole) || 'user',
+        fullName: profileResult.data?.full_name || null,
         loading: false,
       }));
     } catch (err) {
-      console.error('Error fetching role:', err);
-      setState(prev => ({ ...prev, role: 'user', loading: false }));
+      console.error('Error fetching user data:', err);
+      setState(prev => ({ ...prev, role: 'user', fullName: null, loading: false }));
     }
   };
 
@@ -118,6 +130,7 @@ export function useAuth() {
     user: state.user,
     session: state.session,
     role: state.role,
+    fullName: state.fullName,
     loading: state.loading,
     isAuthenticated: !!state.session,
     isAdmin: state.role === 'admin',
