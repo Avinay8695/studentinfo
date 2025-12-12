@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 export function Header() {
-  const { user, role, isAdmin, signOut } = useAuth();
+  const { user, fullName, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -70,8 +70,11 @@ export function Header() {
             <div className="hidden lg:flex items-center gap-4">
               <div className="text-right mr-2">
                 <p className="text-xs text-primary-foreground/60 uppercase tracking-wider">Welcome</p>
-                <p className="text-sm font-semibold truncate max-w-[150px]">
-                  {user?.email?.split('@')[0] || 'User'}
+                <p className="text-sm font-semibold truncate max-w-[200px]">
+                  {fullName || 'User'}
+                </p>
+                <p className="text-xs text-primary-foreground/70 truncate max-w-[200px]">
+                  {user?.email}
                 </p>
               </div>
               <div className="h-10 w-px bg-white/20" />
@@ -97,7 +100,8 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-3 py-2">
-                    <p className="text-sm font-medium">{user.email}</p>
+                    <p className="text-sm font-semibold">{fullName || 'User'}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                       {isAdmin ? (
                         <>
