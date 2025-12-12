@@ -23,6 +23,7 @@ export type Database = {
           month: number
           paid_date: string | null
           student_id: string
+          year: number
         }
         Insert: {
           amount?: number
@@ -32,6 +33,7 @@ export type Database = {
           month: number
           paid_date?: string | null
           student_id: string
+          year: number
         }
         Update: {
           amount?: number
@@ -41,6 +43,7 @@ export type Database = {
           month?: number
           paid_date?: string | null
           student_id?: string
+          year?: number
         }
         Relationships: [
           {

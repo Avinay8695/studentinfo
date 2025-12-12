@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap, Calendar, CreditCard } from 'lucide-react';
+import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap, Calendar, CreditCard, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface StudentTableProps {
@@ -15,6 +15,7 @@ interface StudentTableProps {
   onEdit: (student: Student) => void;
   onDelete: (id: string) => void;
   onViewPayments: (student: Student) => void;
+  onViewAnalytics: (student: Student) => void;
 }
 
 export function StudentTable({
@@ -26,6 +27,7 @@ export function StudentTable({
   onEdit,
   onDelete,
   onViewPayments,
+  onViewAnalytics,
 }: StudentTableProps) {
   const handleDelete = (student: Student) => {
     if (window.confirm(`Are you sure you want to delete "${student.fullName}"?`)) {
@@ -161,6 +163,15 @@ export function StudentTable({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onViewAnalytics(student)}
+                          className="h-9 w-9 text-blue-600 hover:text-blue-700 hover:bg-blue-500/15 rounded-xl transition-all hover:scale-105"
+                          title="View Analytics"
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"

@@ -53,6 +53,7 @@ interface DbPayment {
   id: string;
   student_id: string;
   month: number;
+  year: number;
   amount: number;
   is_paid: boolean;
   paid_date: string | null;
@@ -60,6 +61,12 @@ interface DbPayment {
 
 // Convert DB student to frontend Student type
 function toStudent(dbStudent: DbStudent, payments: DbPayment[]): Student {
+  // Sort payments by year then month for proper display order
+  const sortedPayments = [...payments].sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.month - b.month;
+  });
+
   return {
     id: dbStudent.id,
     fullName: dbStudent.full_name,
@@ -73,9 +80,9 @@ function toStudent(dbStudent: DbStudent, payments: DbPayment[]): Student {
     mobile: dbStudent.mobile_number || '',
     address: '',
     notes: '',
-    monthlyPayments: payments.map(p => ({
+    monthlyPayments: sortedPayments.map(p => ({
       month: p.month,
-      year: new Date(dbStudent.enrollment_date || new Date()).getFullYear(),
+      year: p.year,
       amount: Number(p.amount),
       isPaid: p.is_paid,
       paidDate: p.paid_date || undefined,
@@ -151,9 +158,10 @@ export function useStudents() {
 
       // Insert monthly payments
       if (studentData.monthlyPayments && studentData.monthlyPayments.length > 0) {
-        const paymentsToInsert = studentData.monthlyPayments.map((payment, index) => ({
+        const paymentsToInsert = studentData.monthlyPayments.map((payment) => ({
           student_id: newStudent.id,
-          month: index + 1,
+          month: payment.month,
+          year: payment.year,
           amount: payment.amount,
           is_paid: payment.isPaid,
           paid_date: payment.paidDate || null,
@@ -233,6 +241,7 @@ export function useStudents() {
         .from('monthly_payments')
         .select('*')
         .eq('student_id', studentId)
+        .order('year', { ascending: true })
         .order('month', { ascending: true });
 
       if (fetchError) throw fetchError;

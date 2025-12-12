@@ -8,6 +8,7 @@ import { StatsCards } from '@/components/StatsCards';
 import { StudentTable } from '@/components/StudentTable';
 import { Footer } from '@/components/Footer';
 import { MonthlyPaymentTracker } from '@/components/MonthlyPaymentTracker';
+import { StudentAnalytics } from '@/components/StudentAnalytics';
 import { ExportButton } from '@/components/ExportButton';
 import { Student } from '@/types/student';
 import { Loader2 } from 'lucide-react';
@@ -36,6 +37,8 @@ const Index = () => {
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isAnalyticsDialogOpen, setIsAnalyticsDialogOpen] = useState(false);
+  const [analyticsStudentId, setAnalyticsStudentId] = useState<string | null>(null);
 
   // Redirect to auth if not authenticated
   useEffect(() => {
@@ -44,9 +47,13 @@ const Index = () => {
     }
   }, [isAuthenticated, authLoading, navigate]);
 
-  // Get the latest student data from allStudents - this ensures instant updates
+  // Get the latest student data from allStudents
   const selectedStudentForPayments = selectedStudentId 
     ? allStudents.find(s => s.id === selectedStudentId) || null
+    : null;
+
+  const selectedStudentForAnalytics = analyticsStudentId 
+    ? allStudents.find(s => s.id === analyticsStudentId) || null
     : null;
 
   const handleViewPayments = (student: Student) => {
@@ -57,6 +64,16 @@ const Index = () => {
   const handleClosePaymentDialog = () => {
     setIsPaymentDialogOpen(false);
     setSelectedStudentId(null);
+  };
+
+  const handleViewAnalytics = (student: Student) => {
+    setAnalyticsStudentId(student.id);
+    setIsAnalyticsDialogOpen(true);
+  };
+
+  const handleCloseAnalyticsDialog = () => {
+    setIsAnalyticsDialogOpen(false);
+    setAnalyticsStudentId(null);
   };
 
   // Show loading while checking auth
@@ -122,6 +139,7 @@ const Index = () => {
             onEdit={startEditing}
             onDelete={deleteStudent}
             onViewPayments={handleViewPayments}
+            onViewAnalytics={handleViewAnalytics}
           />
         )}
       </main>
@@ -134,6 +152,13 @@ const Index = () => {
         isOpen={isPaymentDialogOpen}
         onClose={handleClosePaymentDialog}
         onUpdatePayment={updatePaymentStatus}
+      />
+
+      {/* Student Analytics Dialog */}
+      <StudentAnalytics
+        student={selectedStudentForAnalytics}
+        isOpen={isAnalyticsDialogOpen}
+        onClose={handleCloseAnalyticsDialog}
       />
     </div>
   );
