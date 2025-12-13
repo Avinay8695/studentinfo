@@ -10,11 +10,13 @@ import { Footer } from '@/components/Footer';
 import { MonthlyPaymentTracker } from '@/components/MonthlyPaymentTracker';
 import { StudentAnalytics } from '@/components/StudentAnalytics';
 import { ExportButton } from '@/components/ExportButton';
+import { DashboardSummary } from '@/components/DashboardSummary';
 import { Student } from '@/types/student';
 import { Loader2 } from 'lucide-react';
 import { StudentTableSkeleton } from '@/components/skeletons/StudentTableSkeleton';
 import { StatsCardsSkeleton } from '@/components/skeletons/StatsCardsSkeleton';
 import { StudentFormSkeleton } from '@/components/skeletons/StudentFormSkeleton';
+import { ScrollToTop } from '@/components/ScrollToTop';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -108,6 +110,11 @@ const Index = () => {
       <Header />
       
       <main className="flex-1 container max-w-7xl mx-auto px-4 py-10 relative z-10">
+        {/* Dashboard Summary */}
+        {!studentsLoading && stats.total > 0 && (
+          <DashboardSummary stats={stats} />
+        )}
+
         {/* Stats Cards with Export Button */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div className="flex-1">
@@ -167,6 +174,9 @@ const Index = () => {
         isOpen={isAnalyticsDialogOpen}
         onClose={handleCloseAnalyticsDialog}
       />
+
+      {/* Scroll to Top Button */}
+      <ScrollToTop />
     </div>
   );
 };

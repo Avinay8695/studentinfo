@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Student, FeesFilter } from '@/types/student';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap, Calendar, CreditCard, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 
 interface StudentTableProps {
   students: Student[];
@@ -29,10 +31,20 @@ export function StudentTable({
   onViewPayments,
   onViewAnalytics,
 }: StudentTableProps) {
-  const handleDelete = (student: Student) => {
-    if (window.confirm(`Are you sure you want to delete "${student.fullName}"?`)) {
-      onDelete(student.id);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+
+  const handleDeleteClick = (student: Student) => {
+    setStudentToDelete(student);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (studentToDelete) {
+      onDelete(studentToDelete.id);
       toast.success('Student deleted successfully');
+      setDeleteDialogOpen(false);
+      setStudentToDelete(null);
     }
   };
 
@@ -193,7 +205,7 @@ export function StudentTable({
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(student)}
+                          onClick={() => handleDeleteClick(student)}
                           className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/15 rounded-xl transition-all hover:scale-105"
                           title="Delete Student"
                         >
@@ -222,6 +234,14 @@ export function StudentTable({
           </p>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+        studentName={studentToDelete?.fullName || ''}
+      />
     </div>
   );
 }
