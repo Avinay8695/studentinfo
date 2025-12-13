@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useStudents } from '@/hooks/useStudents';
+import { useStudentsQuery } from '@/hooks/useStudentsQuery';
 import { useAuth } from '@/hooks/useAuth';
 import { Header } from '@/components/Header';
-import { StudentForm } from '@/components/StudentForm';
+import { StudentFormNew } from '@/components/StudentFormNew';
 import { StatsCards } from '@/components/StatsCards';
 import { StudentTable } from '@/components/StudentTable';
 import { Footer } from '@/components/Footer';
@@ -12,6 +12,9 @@ import { StudentAnalytics } from '@/components/StudentAnalytics';
 import { ExportButton } from '@/components/ExportButton';
 import { Student } from '@/types/student';
 import { Loader2 } from 'lucide-react';
+import { StudentTableSkeleton } from '@/components/skeletons/StudentTableSkeleton';
+import { StatsCardsSkeleton } from '@/components/skeletons/StatsCardsSkeleton';
+import { StudentFormSkeleton } from '@/components/skeletons/StudentFormSkeleton';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -33,7 +36,9 @@ const Index = () => {
     updatePaymentStatus,
     startEditing,
     cancelEditing,
-  } = useStudents();
+    isAdding,
+    isUpdating,
+  } = useStudentsQuery();
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -106,7 +111,7 @@ const Index = () => {
         {/* Stats Cards with Export Button */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div className="flex-1">
-            <StatsCards stats={stats} />
+            {studentsLoading ? <StatsCardsSkeleton /> : <StatsCards stats={stats} />}
           </div>
           <div className="flex justify-end sm:mt-0">
             <ExportButton students={allStudents} />
@@ -115,20 +120,22 @@ const Index = () => {
 
         {/* Student Form */}
         <div className="mb-8">
-          <StudentForm
-            editingStudent={editingStudent}
-            onSubmit={addStudent}
-            onUpdate={updateStudent}
-            onCancel={cancelEditing}
-          />
+          {studentsLoading ? (
+            <StudentFormSkeleton />
+          ) : (
+            <StudentFormNew
+              editingStudent={editingStudent}
+              onSubmit={addStudent}
+              onUpdate={updateStudent}
+              onCancel={cancelEditing}
+              isSubmitting={isAdding || isUpdating}
+            />
+          )}
         </div>
 
         {/* Student Table */}
         {studentsLoading ? (
-          <div className="card-elevated p-20 text-center">
-            <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading students...</p>
-          </div>
+          <StudentTableSkeleton />
         ) : (
           <StudentTable
             students={students}
