@@ -20,7 +20,7 @@ import { ScrollToTop } from '@/components/ScrollToTop';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, loading: authLoading, user, role } = useAuth();
+  const { isAuthenticated, loading: authLoading, user, isAdmin } = useAuth();
   
   const {
     students,
@@ -154,6 +154,7 @@ const Index = () => {
             onDelete={deleteStudent}
             onViewPayments={handleViewPayments}
             onViewAnalytics={handleViewAnalytics}
+            isAdmin={isAdmin}
           />
         )}
       </main>

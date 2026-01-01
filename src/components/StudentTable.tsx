@@ -18,6 +18,7 @@ interface StudentTableProps {
   onDelete: (id: string) => void;
   onViewPayments: (student: Student) => void;
   onViewAnalytics: (student: Student) => void;
+  isAdmin?: boolean;
 }
 
 export function StudentTable({
@@ -30,6 +31,7 @@ export function StudentTable({
   onDelete,
   onViewPayments,
   onViewAnalytics,
+  isAdmin = false,
 }: StudentTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
@@ -202,15 +204,17 @@ export function StudentTable({
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteClick(student)}
-                          className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/15 rounded-xl transition-all hover:scale-105"
-                          title="Delete Student"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteClick(student)}
+                            className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/15 rounded-xl transition-all hover:scale-105"
+                            title="Delete Student"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
