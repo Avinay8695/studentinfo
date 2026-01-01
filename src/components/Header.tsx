@@ -14,11 +14,10 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 export function Header() {
-  const { user, fullName, isAdmin, role } = useAuth();
+  const { user, fullName, isAdmin, role, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    const { signOut } = useAuth();
     const { error } = await signOut();
     if (error) {
       toast.error('Failed to sign out');
