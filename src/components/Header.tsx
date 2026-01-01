@@ -1,7 +1,8 @@
-import { GraduationCap, Sparkles, LogOut, User, Shield } from 'lucide-react';
+import { GraduationCap, Sparkles, LogOut, User, Shield, Users } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,10 +14,11 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 export function Header() {
-  const { user, fullName, isAdmin, signOut } = useAuth();
+  const { user, fullName, isAdmin, role } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
+    const { signOut } = useAuth();
     const { error } = await signOut();
     if (error) {
       toast.error('Failed to sign out');
@@ -69,7 +71,19 @@ export function Header() {
             {/* Desktop only info */}
             <div className="hidden lg:flex items-center gap-4">
               <div className="text-right mr-2">
-                <p className="text-xs text-primary-foreground/60 uppercase tracking-wider">Welcome</p>
+                <div className="flex items-center justify-end gap-2 mb-0.5">
+                  <p className="text-xs text-primary-foreground/60 uppercase tracking-wider">Welcome</p>
+                  <Badge 
+                    variant={isAdmin ? 'default' : 'secondary'}
+                    className={`text-[10px] px-1.5 py-0 ${isAdmin ? 'bg-yellow-500 text-yellow-950 hover:bg-yellow-400' : 'bg-white/20 text-primary-foreground hover:bg-white/30'}`}
+                  >
+                    {isAdmin ? (
+                      <><Shield className="w-2.5 h-2.5 mr-0.5" /> Admin</>
+                    ) : (
+                      <><User className="w-2.5 h-2.5 mr-0.5" /> User</>
+                    )}
+                  </Badge>
+                </div>
                 <p className="text-sm font-semibold truncate max-w-[200px]">
                   {fullName || 'User'}
                 </p>
@@ -100,20 +114,30 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-3 py-2">
-                    <p className="text-sm font-semibold">{fullName || 'User'}</p>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-semibold">{fullName || 'User'}</p>
+                      <Badge 
+                        variant={isAdmin ? 'default' : 'secondary'}
+                        className={`text-[10px] ${isAdmin ? '' : ''}`}
+                      >
+                        {role === 'admin' ? 'Admin' : 'User'}
+                      </Badge>
+                    </div>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                      {isAdmin ? (
-                        <>
-                          <Shield className="w-3 h-3 text-primary" />
-                          Administrator
-                        </>
-                      ) : (
-                        'User'
-                      )}
-                    </p>
                   </div>
                   <DropdownMenuSeparator />
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/users')}
+                        className="cursor-pointer"
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        User Management
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem 
                     onClick={handleSignOut}
                     className="text-destructive cursor-pointer"
