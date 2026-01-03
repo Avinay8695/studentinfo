@@ -139,8 +139,8 @@ export function generatePrintableReport(students: Student[]) {
       </style>
     </head>
     <body>
-      <h1>Student Management System</h1>
-      <p style="text-align: center; color: #666;">Computer Training Institute</p>
+      <h1>Success Desirous</h1>
+      <p style="text-align: center; color: #666;">Student Management System</p>
       
       <div class="summary">
         <div class="summary-grid">
@@ -201,7 +201,7 @@ export function generatePrintableReport(students: Student[]) {
       </table>
 
       <div class="footer">
-        Generated on ${new Date().toLocaleString('en-IN')} | Student Management System
+        Generated on ${new Date().toLocaleString('en-IN')} | Success Desirous
       </div>
 
       <script>window.print();</script>
