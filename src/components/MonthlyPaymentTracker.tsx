@@ -1,15 +1,17 @@
 import { Student, MonthlyPayment } from '@/types/student';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, X, Calendar, IndianRupee, User, GraduationCap, Clock } from 'lucide-react';
+import { Check, X, Calendar, IndianRupee, User, GraduationCap, Clock, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface MonthlyPaymentTrackerProps {
   student: Student | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdatePayment: (studentId: string, paymentIndex: number, isPaid: boolean) => void;
+  isAdmin?: boolean;
 }
 
 const MONTH_NAMES = [
@@ -21,7 +23,8 @@ export function MonthlyPaymentTracker({
   student, 
   isOpen, 
   onClose, 
-  onUpdatePayment 
+  onUpdatePayment,
+  isAdmin = false
 }: MonthlyPaymentTrackerProps) {
   if (!student) return null;
 
@@ -31,6 +34,12 @@ export function MonthlyPaymentTracker({
   const totalPending = payments.filter(p => !p.isPaid).reduce((sum, p) => sum + p.amount, 0);
   
   const handleTogglePayment = (index: number, currentStatus: boolean) => {
+    // If payment is already paid and user is not admin, prevent unpaid action
+    if (currentStatus && !isAdmin) {
+      toast.error('Only admins can mark payments as unpaid');
+      return;
+    }
+    
     onUpdatePayment(student.id, index, !currentStatus);
     toast.success(!currentStatus ? 'Payment marked as paid' : 'Payment marked as pending');
   };
@@ -90,6 +99,14 @@ export function MonthlyPaymentTracker({
           </div>
         </div>
 
+        {/* Admin Notice for Users */}
+        {!isAdmin && (
+          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-4 flex items-center gap-2">
+            <Lock className="w-4 h-4 text-amber-600" />
+            <p className="text-sm text-amber-700">Only admins can mark paid fees as unpaid</p>
+          </div>
+        )}
+
         {/* Monthly Payments Grid */}
         {payments.length > 0 ? (
           <div className="space-y-2">
@@ -98,45 +115,68 @@ export function MonthlyPaymentTracker({
               Payment Schedule
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {payments.map((payment, index) => (
-                <div
-                  key={index}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    payment.isPaid 
-                      ? 'bg-emerald-500/5 border-emerald-500/30' 
-                      : 'bg-rose-500/5 border-rose-500/30'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-card-foreground">
-                        {MONTH_NAMES[payment.month]} {payment.year}
-                      </p>
-                      <p className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                        <IndianRupee className="w-3 h-3" />
-                        {payment.amount}
-                      </p>
-                      {payment.isPaid && payment.paidDate && (
-                        <p className="text-xs text-emerald-600 mt-1">
-                          Paid on {format(new Date(payment.paidDate), 'dd MMM yyyy')}
+              {payments.map((payment, index) => {
+                const canToggle = !payment.isPaid || isAdmin;
+                
+                return (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      payment.isPaid 
+                        ? 'bg-emerald-500/5 border-emerald-500/30' 
+                        : 'bg-rose-500/5 border-rose-500/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-card-foreground">
+                          {MONTH_NAMES[payment.month]} {payment.year}
                         </p>
-                      )}
+                        <p className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                          <IndianRupee className="w-3 h-3" />
+                          {payment.amount}
+                        </p>
+                        {payment.isPaid && payment.paidDate && (
+                          <p className="text-xs text-emerald-600 mt-1">
+                            Paid on {format(new Date(payment.paidDate), 'dd MMM yyyy')}
+                          </p>
+                        )}
+                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleTogglePayment(index, payment.isPaid)}
+                              disabled={payment.isPaid && !isAdmin}
+                              className={`rounded-full w-10 h-10 p-0 ${
+                                payment.isPaid
+                                  ? canToggle
+                                    ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                    : 'bg-emerald-500/50 text-white cursor-not-allowed'
+                                  : 'bg-rose-500/20 text-rose-600 hover:bg-rose-500/30'
+                              }`}
+                            >
+                              {payment.isPaid ? (
+                                canToggle ? <Check className="w-5 h-5" /> : <Lock className="w-4 h-4" />
+                              ) : (
+                                <X className="w-5 h-5" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {payment.isPaid 
+                              ? (canToggle ? 'Click to mark as unpaid' : 'Admin access required to mark as unpaid')
+                              : 'Click to mark as paid'
+                            }
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleTogglePayment(index, payment.isPaid)}
-                      className={`rounded-full w-10 h-10 p-0 ${
-                        payment.isPaid
-                          ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                          : 'bg-rose-500/20 text-rose-600 hover:bg-rose-500/30'
-                      }`}
-                    >
-                      {payment.isPaid ? <Check className="w-5 h-5" /> : <X className="w-5 h-5" />}
-                    </Button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ) : (

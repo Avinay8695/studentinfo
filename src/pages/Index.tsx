@@ -11,6 +11,7 @@ import { MonthlyPaymentTracker } from '@/components/MonthlyPaymentTracker';
 import { StudentAnalytics } from '@/components/StudentAnalytics';
 import { ExportButton } from '@/components/ExportButton';
 import { DashboardSummary } from '@/components/DashboardSummary';
+import { DateRangeAnalytics } from '@/components/DateRangeAnalytics';
 import { Student } from '@/types/student';
 import { Loader2 } from 'lucide-react';
 import { StudentTableSkeleton } from '@/components/skeletons/StudentTableSkeleton';
@@ -115,6 +116,11 @@ const Index = () => {
           <DashboardSummary stats={stats} />
         )}
 
+        {/* Date Range Analytics */}
+        {!studentsLoading && allStudents.length > 0 && (
+          <DateRangeAnalytics students={allStudents} />
+        )}
+
         {/* Stats Cards with Export Button */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div className="flex-1">
@@ -167,6 +173,7 @@ const Index = () => {
         isOpen={isPaymentDialogOpen}
         onClose={handleClosePaymentDialog}
         onUpdatePayment={updatePaymentStatus}
+        isAdmin={isAdmin}
       />
 
       {/* Student Analytics Dialog */}
