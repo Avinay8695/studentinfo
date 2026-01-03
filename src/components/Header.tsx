@@ -55,12 +55,12 @@ export function Header() {
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
                 <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight font-display truncate">
-                  Student Management
+                  Success Desirous
                 </h1>
                 <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-300 animate-pulse flex-shrink-0" />
               </div>
               <p className="text-primary-foreground/80 text-xs sm:text-sm font-semibold tracking-wider sm:tracking-widest uppercase truncate">
-                Computer Training Institute
+                Student Management System
               </p>
             </div>
           </div>

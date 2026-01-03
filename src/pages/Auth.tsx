@@ -139,10 +139,10 @@ export default function Auth() {
               <GraduationCap className="w-10 h-10 text-white" />
             </div>
             <h1 className="text-3xl font-extrabold font-display gradient-text mb-2">
-              Student Management
+              Success Desirous
             </h1>
             <p className="text-muted-foreground">
-              Computer Training Institute
+              Student Management System
             </p>
           </div>
 
