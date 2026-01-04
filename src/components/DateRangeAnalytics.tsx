@@ -117,13 +117,13 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
       
       // Check payments in range
       student.monthlyPayments?.forEach(payment => {
-        // Month is 0-indexed in the data, create date for middle of month
-        const paymentDate = new Date(payment.year, payment.month, 15);
+        // Month is 1-indexed in the data (1=Jan, 12=Dec), convert to 0-indexed for Date
+        const paymentDate = new Date(payment.year, payment.month - 1, 15);
         if (isWithinInterval(paymentDate, { start, end })) {
           paymentsInRange.push({
             isPaid: payment.isPaid,
             amount: payment.amount,
-            month: payment.month,
+            month: payment.month, // Keep 1-indexed for display
             year: payment.year,
             studentName: student.fullName,
             course: student.course,
@@ -151,10 +151,11 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
     // Monthly breakdown for chart - group by year-month
     const monthlyData: { [key: string]: { collected: number; pending: number; month: string; total: number; sortKey: string } } = {};
     paymentsInRange.forEach(payment => {
+      // payment.month is 1-indexed, so subtract 1 for MONTH_NAMES array
       const key = `${payment.year}-${String(payment.month).padStart(2, '0')}`;
       if (!monthlyData[key]) {
         monthlyData[key] = {
-          month: `${MONTH_NAMES[payment.month]} ${String(payment.year).slice(-2)}`,
+          month: `${MONTH_NAMES[payment.month - 1]} ${String(payment.year).slice(-2)}`,
           collected: 0,
           pending: 0,
           total: 0,
@@ -471,12 +472,15 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
                           ))}
                         </Pie>
                         <Tooltip 
-                          formatter={(value: number) => [formatFullCurrency(value)]}
+                          formatter={(value: number, name: string, props: any) => [formatFullCurrency(value), props.payload.name]}
                           contentStyle={{ 
                             backgroundColor: 'hsl(var(--card))', 
                             border: '1px solid hsl(var(--border))',
-                            borderRadius: '12px'
+                            borderRadius: '12px',
+                            color: 'hsl(var(--foreground))'
                           }}
+                          labelStyle={{ color: 'hsl(var(--foreground))' }}
+                          itemStyle={{ color: 'hsl(var(--foreground))' }}
                         />
                       </PieChart>
                     </ResponsiveContainer>

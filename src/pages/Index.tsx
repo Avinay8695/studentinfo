@@ -149,13 +149,6 @@ const Index = () => {
           )}
         </div>
 
-        {/* Date Range Analytics */}
-        <div id="analytics">
-          {!studentsLoading && allStudents.length > 0 && (
-            <DateRangeAnalytics students={allStudents} />
-          )}
-        </div>
-
         {/* Stats Cards with Export Button */}
         <div id="stats" className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div className="flex-1">
@@ -220,6 +213,13 @@ const Index = () => {
               onViewAnalytics={handleViewAnalytics}
               isAdmin={isAdmin}
             />
+          )}
+        </div>
+
+        {/* Date Range Analytics - Below Students */}
+        <div id="analytics" className="mt-8">
+          {!studentsLoading && allStudents.length > 0 && (
+            <DateRangeAnalytics students={allStudents} />
           )}
         </div>
       </main>
