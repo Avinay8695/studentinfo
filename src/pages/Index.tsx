@@ -12,12 +12,15 @@ import { StudentAnalytics } from '@/components/StudentAnalytics';
 import { ExportButton } from '@/components/ExportButton';
 import { DashboardSummary } from '@/components/DashboardSummary';
 import { DateRangeAnalytics } from '@/components/DateRangeAnalytics';
+import { SectionNav, defaultSections } from '@/components/SectionNav';
 import { Student } from '@/types/student';
-import { Loader2 } from 'lucide-react';
+import { Loader2, UserPlus, ChevronDown, ChevronUp } from 'lucide-react';
 import { StudentTableSkeleton } from '@/components/skeletons/StudentTableSkeleton';
 import { StatsCardsSkeleton } from '@/components/skeletons/StatsCardsSkeleton';
 import { StudentFormSkeleton } from '@/components/skeletons/StudentFormSkeleton';
 import { ScrollToTop } from '@/components/ScrollToTop';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -47,6 +50,7 @@ const Index = () => {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isAnalyticsDialogOpen, setIsAnalyticsDialogOpen] = useState(false);
   const [analyticsStudentId, setAnalyticsStudentId] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Redirect to auth if not authenticated
   useEffect(() => {
@@ -54,6 +58,13 @@ const Index = () => {
       navigate('/auth', { replace: true });
     }
   }, [isAuthenticated, authLoading, navigate]);
+
+  // Open form when editing
+  useEffect(() => {
+    if (editingStudent) {
+      setIsFormOpen(true);
+    }
+  }, [editingStudent]);
 
   // Get the latest student data from allStudents
   const selectedStudentForPayments = selectedStudentId 
@@ -84,6 +95,23 @@ const Index = () => {
     setAnalyticsStudentId(null);
   };
 
+  const handleAddStudent = async (data: any) => {
+    await addStudent(data);
+    setIsFormOpen(false);
+  };
+
+  const handleUpdateStudent = async (id: string, data: any) => {
+    await updateStudent(id, data);
+    setIsFormOpen(false);
+  };
+
+  const handleCancelEdit = () => {
+    cancelEditing();
+    if (!editingStudent) {
+      setIsFormOpen(false);
+    }
+  };
+
   // Show loading while checking auth
   if (authLoading) {
     return (
@@ -109,20 +137,27 @@ const Index = () => {
       <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-3xl pointer-events-none" />
       
       <Header />
+
+      {/* Section Navigation */}
+      <SectionNav sections={defaultSections} />
       
       <main className="flex-1 container max-w-7xl mx-auto px-4 py-10 relative z-10">
         {/* Dashboard Summary */}
-        {!studentsLoading && stats.total > 0 && (
-          <DashboardSummary stats={stats} />
-        )}
+        <div id="dashboard-summary">
+          {!studentsLoading && stats.total > 0 && (
+            <DashboardSummary stats={stats} />
+          )}
+        </div>
 
         {/* Date Range Analytics */}
-        {!studentsLoading && allStudents.length > 0 && (
-          <DateRangeAnalytics students={allStudents} />
-        )}
+        <div id="analytics">
+          {!studentsLoading && allStudents.length > 0 && (
+            <DateRangeAnalytics students={allStudents} />
+          )}
+        </div>
 
         {/* Stats Cards with Export Button */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+        <div id="stats" className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div className="flex-1">
             {studentsLoading ? <StatsCardsSkeleton /> : <StatsCards stats={stats} />}
           </div>
@@ -131,38 +166,62 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Student Form */}
-        <div className="mb-8">
-          {studentsLoading ? (
-            <StudentFormSkeleton />
-          ) : (
-            <StudentFormNew
-              editingStudent={editingStudent}
-              onSubmit={addStudent}
-              onUpdate={updateStudent}
-              onCancel={cancelEditing}
-              isSubmitting={isAdding || isUpdating}
-            />
-          )}
+        {/* Student Form - Collapsible */}
+        <div id="add-student" className="mb-8">
+          <Collapsible open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant={isFormOpen ? "secondary" : "default"}
+                className={`w-full py-6 text-lg font-semibold transition-all duration-300 ${
+                  isFormOpen 
+                    ? 'bg-muted hover:bg-muted/80 text-muted-foreground' 
+                    : 'btn-glow bg-gradient-to-r from-primary to-accent hover:opacity-90'
+                }`}
+              >
+                <UserPlus className="w-5 h-5 mr-2" />
+                {editingStudent ? 'Edit Student' : 'Add New Student'}
+                {isFormOpen ? (
+                  <ChevronUp className="w-5 h-5 ml-2" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 ml-2" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4 animate-fade-in">
+              {studentsLoading ? (
+                <StudentFormSkeleton />
+              ) : (
+                <StudentFormNew
+                  editingStudent={editingStudent}
+                  onSubmit={handleAddStudent}
+                  onUpdate={handleUpdateStudent}
+                  onCancel={handleCancelEdit}
+                  isSubmitting={isAdding || isUpdating}
+                />
+              )}
+            </CollapsibleContent>
+          </Collapsible>
         </div>
 
         {/* Student Table */}
-        {studentsLoading ? (
-          <StudentTableSkeleton />
-        ) : (
-          <StudentTable
-            students={students}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            feesFilter={feesFilter}
-            onFilterChange={setFeesFilter}
-            onEdit={startEditing}
-            onDelete={deleteStudent}
-            onViewPayments={handleViewPayments}
-            onViewAnalytics={handleViewAnalytics}
-            isAdmin={isAdmin}
-          />
-        )}
+        <div id="students">
+          {studentsLoading ? (
+            <StudentTableSkeleton />
+          ) : (
+            <StudentTable
+              students={students}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              feesFilter={feesFilter}
+              onFilterChange={setFeesFilter}
+              onEdit={startEditing}
+              onDelete={deleteStudent}
+              onViewPayments={handleViewPayments}
+              onViewAnalytics={handleViewAnalytics}
+              isAdmin={isAdmin}
+            />
+          )}
+        </div>
       </main>
 
       <Footer />
