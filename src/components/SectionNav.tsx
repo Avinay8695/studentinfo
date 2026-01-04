@@ -77,8 +77,8 @@ export function SectionNav({ sections }: SectionNavProps) {
 // Export the default sections configuration
 export const defaultSections = [
   { id: 'dashboard-summary', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-  { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-4 h-4" /> },
   { id: 'stats', label: 'Statistics', icon: <PieChart className="w-4 h-4" /> },
   { id: 'add-student', label: 'Add Student', icon: <UserPlus className="w-4 h-4" /> },
   { id: 'students', label: 'Students List', icon: <Users className="w-4 h-4" /> },
+  { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-4 h-4" /> },
 ];
