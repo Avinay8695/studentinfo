@@ -4,8 +4,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { GraduationCap, Mail, Lock, User, LogIn, UserPlus, Sparkles, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, LogIn, UserPlus, Sparkles, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import logoImage from '@/assets/logo-success-desirous.jpg';
 import { z } from 'zod';
 
 const emailSchema = z.string().trim().email('Invalid email address').max(255, 'Email too long');
@@ -135,8 +136,14 @@ export default function Auth() {
         <div className="w-full max-w-md">
           {/* Logo and Title */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center p-4 bg-gradient-to-br from-primary to-accent rounded-2xl shadow-2xl mb-4 animate-float">
-              <GraduationCap className="w-10 h-10 text-white" />
+            <div className="inline-block mb-4 animate-float">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-primary/20">
+                <img 
+                  src={logoImage} 
+                  alt="Success Desirous Logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
             <h1 className="text-3xl font-extrabold font-display gradient-text mb-2">
               Success Desirous

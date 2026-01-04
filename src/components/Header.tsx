@@ -1,4 +1,5 @@
-import { GraduationCap, Sparkles, LogOut, User, Shield, Users } from 'lucide-react';
+import { Sparkles, LogOut, User, Shield, Users } from 'lucide-react';
+import logoImage from '@/assets/logo-success-desirous.jpg';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -48,8 +49,12 @@ export function Header() {
           <div className="flex items-center gap-3 sm:gap-5 min-w-0 flex-1">
             <div className="relative flex-shrink-0">
               <div className="absolute inset-0 bg-white/20 rounded-xl sm:rounded-2xl blur-xl animate-pulse-slow" />
-              <div className="relative p-2.5 sm:p-4 bg-white/15 rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/25 shadow-2xl">
-                <GraduationCap className="w-7 h-7 sm:w-10 sm:h-10" />
+              <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-white/30 shadow-2xl">
+                <img 
+                  src={logoImage} 
+                  alt="Success Desirous Logo" 
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
             <div className="min-w-0">

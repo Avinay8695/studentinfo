@@ -28,7 +28,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, Cell, PieChart, Pie, Legend, ResponsiveContainer, Tooltip, AreaChart, Area } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Cell, PieChart, Pie, Legend, ResponsiveContainer, Tooltip, AreaChart, Area, CartesianGrid } from 'recharts';
 
 interface DateRangeAnalyticsProps {
   students: Student[];
@@ -103,18 +103,28 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
       }
       
       // Check enrollments in range
-      const enrollDate = parseISO(student.enrollmentDate);
-      if (isWithinInterval(enrollDate, { start, end })) {
-        enrollmentsInRange++;
-        courseData[student.course].students++;
+      if (student.enrollmentDate) {
+        try {
+          const enrollDate = parseISO(student.enrollmentDate);
+          if (isWithinInterval(enrollDate, { start, end })) {
+            enrollmentsInRange++;
+            courseData[student.course].students++;
+          }
+        } catch (e) {
+          // Invalid date, skip
+        }
       }
       
       // Check payments in range
       student.monthlyPayments?.forEach(payment => {
-        const paymentDate = new Date(payment.year, payment.month, 1);
+        // Month is 0-indexed in the data, create date for middle of month
+        const paymentDate = new Date(payment.year, payment.month, 15);
         if (isWithinInterval(paymentDate, { start, end })) {
           paymentsInRange.push({
-            ...payment,
+            isPaid: payment.isPaid,
+            amount: payment.amount,
+            month: payment.month,
+            year: payment.year,
             studentName: student.fullName,
             course: student.course,
           });
@@ -138,16 +148,17 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
       ? Math.round((totalPaymentsCollected / totalPaymentsExpected) * 100) 
       : 0;
 
-    // Monthly breakdown for chart
-    const monthlyData: { [key: string]: { collected: number; pending: number; month: string; total: number } } = {};
+    // Monthly breakdown for chart - group by year-month
+    const monthlyData: { [key: string]: { collected: number; pending: number; month: string; total: number; sortKey: string } } = {};
     paymentsInRange.forEach(payment => {
       const key = `${payment.year}-${String(payment.month).padStart(2, '0')}`;
       if (!monthlyData[key]) {
         monthlyData[key] = {
-          month: `${MONTH_NAMES[payment.month]} ${payment.year.toString().slice(-2)}`,
+          month: `${MONTH_NAMES[payment.month]} ${String(payment.year).slice(-2)}`,
           collected: 0,
           pending: 0,
           total: 0,
+          sortKey: key,
         };
       }
       monthlyData[key].total += payment.amount;
@@ -158,9 +169,9 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
       }
     });
 
-    const chartData = Object.entries(monthlyData)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([, value]) => value);
+    const chartData = Object.values(monthlyData)
+      .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+      .map(({ sortKey, ...rest }) => rest);
 
     // Course analytics data
     const courseAnalytics = Object.entries(courseData)
@@ -392,7 +403,8 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
                   Monthly Collection Trend
                 </h3>
                 <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={analytics.chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <BarChart data={analytics.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                     <XAxis 
                       dataKey="month" 
                       tickLine={false} 
@@ -403,7 +415,8 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
                       tickLine={false} 
                       axisLine={false}
                       tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                      tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
+                      tickFormatter={(value) => value >= 1000 ? `₹${(value / 1000).toFixed(0)}K` : `₹${value}`}
+                      width={60}
                     />
                     <Tooltip 
                       formatter={(value: number, name: string) => [formatFullCurrency(value), name === 'collected' ? 'Collected' : 'Pending']}
@@ -413,6 +426,7 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
                         borderRadius: '12px',
                         boxShadow: '0 10px 40px -10px rgba(0,0,0,0.2)'
                       }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
                     />
                     <Bar dataKey="collected" fill="#10b981" radius={[6, 6, 0, 0]} name="Collected" />
                     <Bar dataKey="pending" fill="#ef4444" radius={[6, 6, 0, 0]} name="Pending" />
@@ -515,6 +529,7 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
                     layout="vertical"
                     margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
                   >
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
                     <XAxis 
                       type="number"
                       tickLine={false} 
@@ -528,7 +543,7 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
                       tickLine={false} 
                       axisLine={false}
                       tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                      width={80}
+                      width={90}
                     />
                     <Tooltip 
                       formatter={(value: number, name: string) => [
@@ -540,6 +555,7 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '12px'
                       }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
                     />
                     <Bar dataKey="collected" fill="#10b981" radius={[0, 6, 6, 0]} stackId="a" />
                     <Bar dataKey="pending" fill="#ef4444" radius={[0, 6, 6, 0]} stackId="a" />
@@ -615,14 +631,15 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
                 <AreaChart data={analytics.chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
                     </linearGradient>
                     <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0.05}/>
                     </linearGradient>
                   </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                   <XAxis 
                     dataKey="month" 
                     tickLine={false} 
@@ -633,7 +650,8 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
                     tickLine={false} 
                     axisLine={false}
                     tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                    tickFormatter={(value) => formatCurrency(value)}
+                    tickFormatter={(value) => value >= 1000 ? `₹${(value / 1000).toFixed(0)}K` : `₹${value}`}
+                    width={60}
                   />
                   <Tooltip 
                     formatter={(value: number, name: string) => [
