@@ -92,7 +92,7 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
   const analytics = useMemo(() => {
     const { start, end } = dateRange;
     
-    let paymentsInRange: { isPaid: boolean; amount: number; month: number; year: number; studentName: string; course: string }[] = [];
+    let paymentsInRange: { isPaid: boolean; amount: number; month: number; year: number; paidMonth: number; paidYear: number; studentName: string; course: string }[] = [];
     let enrollmentsInRange = 0;
     const courseData: { [key: string]: { students: number; collected: number; pending: number; total: number } } = {};
     
@@ -115,16 +115,32 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
         }
       }
       
-      // Check payments in range
+      // Check payments in range - for paid payments, use paid_date; for unpaid, use scheduled month
       student.monthlyPayments?.forEach(payment => {
-        // Month is 1-indexed in the data (1=Jan, 12=Dec), convert to 0-indexed for Date
-        const paymentDate = new Date(payment.year, payment.month - 1, 15);
+        let paymentDate: Date;
+        let paidMonth = 0;
+        let paidYear = 0;
+        
+        if (payment.isPaid && payment.paidDate) {
+          // Use actual paid date for paid payments
+          paymentDate = parseISO(payment.paidDate);
+          paidMonth = paymentDate.getMonth() + 1; // 1-indexed
+          paidYear = paymentDate.getFullYear();
+        } else {
+          // Use scheduled month for unpaid payments
+          paymentDate = new Date(payment.year, payment.month - 1, 15);
+          paidMonth = payment.month;
+          paidYear = payment.year;
+        }
+        
         if (isWithinInterval(paymentDate, { start, end })) {
           paymentsInRange.push({
             isPaid: payment.isPaid,
             amount: payment.amount,
-            month: payment.month, // Keep 1-indexed for display
-            year: payment.year,
+            month: payment.month, // Scheduled month
+            year: payment.year, // Scheduled year
+            paidMonth, // Actual paid month (for chart)
+            paidYear, // Actual paid year (for chart)
             studentName: student.fullName,
             course: student.course,
           });
@@ -148,14 +164,14 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
       ? Math.round((totalPaymentsCollected / totalPaymentsExpected) * 100) 
       : 0;
 
-    // Monthly breakdown for chart - group by year-month
+    // Monthly breakdown for chart - group by ACTUAL paid date for collected, scheduled date for pending
     const monthlyData: { [key: string]: { collected: number; pending: number; month: string; total: number; sortKey: string } } = {};
     paymentsInRange.forEach(payment => {
-      // payment.month is 1-indexed, so subtract 1 for MONTH_NAMES array
-      const key = `${payment.year}-${String(payment.month).padStart(2, '0')}`;
+      // Use paidMonth/paidYear for chart grouping (actual payment date for paid, scheduled for unpaid)
+      const key = `${payment.paidYear}-${String(payment.paidMonth).padStart(2, '0')}`;
       if (!monthlyData[key]) {
         monthlyData[key] = {
-          month: `${MONTH_NAMES[payment.month - 1]} ${String(payment.year).slice(-2)}`,
+          month: `${MONTH_NAMES[payment.paidMonth - 1]} ${String(payment.paidYear).slice(-2)}`,
           collected: 0,
           pending: 0,
           total: 0,
