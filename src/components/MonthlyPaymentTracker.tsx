@@ -1,11 +1,11 @@
 import { Student, MonthlyPayment } from '@/types/student';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, X, Calendar, IndianRupee, User, GraduationCap, Clock, Lock } from 'lucide-react';
+import { Check, X, Calendar, IndianRupee, User, GraduationCap, Clock, Lock, Receipt } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
+import { generateReceiptFromPayment } from '@/utils/generateReceipt';
 interface MonthlyPaymentTrackerProps {
   student: Student | null;
   isOpen: boolean;
@@ -118,6 +118,20 @@ export function MonthlyPaymentTracker({
               {payments.map((payment, index) => {
                 const canToggle = !payment.isPaid || isAdmin;
                 
+                const handleDownloadReceipt = () => {
+                  if (payment.isPaid && payment.paidDate) {
+                    generateReceiptFromPayment(
+                      student.fullName,
+                      student.course,
+                      student.batch,
+                      payment.month,
+                      payment.year,
+                      payment.amount,
+                      payment.paidDate
+                    );
+                  }
+                };
+                
                 return (
                   <div
                     key={index}
@@ -128,7 +142,7 @@ export function MonthlyPaymentTracker({
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div>
+                      <div className="flex-1">
                         <p className="font-semibold text-card-foreground">
                           {MONTH_NAMES[payment.month]} {payment.year}
                         </p>
@@ -142,37 +156,56 @@ export function MonthlyPaymentTracker({
                           </p>
                         )}
                       </div>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleTogglePayment(index, payment.isPaid)}
-                              disabled={payment.isPaid && !isAdmin}
-                              className={`rounded-full w-10 h-10 p-0 ${
-                                payment.isPaid
-                                  ? canToggle
-                                    ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                                    : 'bg-emerald-500/50 text-white cursor-not-allowed'
-                                  : 'bg-rose-500/20 text-rose-600 hover:bg-rose-500/30'
-                              }`}
-                            >
-                              {payment.isPaid ? (
-                                canToggle ? <Check className="w-5 h-5" /> : <Lock className="w-4 h-4" />
-                              ) : (
-                                <X className="w-5 h-5" />
-                              )}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {payment.isPaid 
-                              ? (canToggle ? 'Click to mark as unpaid' : 'Admin access required to mark as unpaid')
-                              : 'Click to mark as paid'
-                            }
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <div className="flex items-center gap-2">
+                        {payment.isPaid && payment.paidDate && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={handleDownloadReceipt}
+                                  className="rounded-full w-9 h-9 p-0 bg-blue-500/10 text-blue-600 hover:bg-blue-500/20"
+                                >
+                                  <Receipt className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Download Receipt</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleTogglePayment(index, payment.isPaid)}
+                                disabled={payment.isPaid && !isAdmin}
+                                className={`rounded-full w-10 h-10 p-0 ${
+                                  payment.isPaid
+                                    ? canToggle
+                                      ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                      : 'bg-emerald-500/50 text-white cursor-not-allowed'
+                                    : 'bg-rose-500/20 text-rose-600 hover:bg-rose-500/30'
+                                }`}
+                              >
+                                {payment.isPaid ? (
+                                  canToggle ? <Check className="w-5 h-5" /> : <Lock className="w-4 h-4" />
+                                ) : (
+                                  <X className="w-5 h-5" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {payment.isPaid 
+                                ? (canToggle ? 'Click to mark as unpaid' : 'Admin access required to mark as unpaid')
+                                : 'Click to mark as paid'
+                              }
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </div>
                   </div>
                 );

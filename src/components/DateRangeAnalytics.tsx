@@ -116,31 +116,33 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
       }
       
       // Check payments in range - for paid payments, use paid_date; for unpaid, use scheduled month
+      // Database stores month as 0-indexed (0=Jan, 11=Dec)
       student.monthlyPayments?.forEach(payment => {
         let paymentDate: Date;
-        let paidMonth = 0;
-        let paidYear = 0;
+        let displayMonth = 0; // 1-indexed for display (1=Jan)
+        let displayYear = 0;
         
         if (payment.isPaid && payment.paidDate) {
           // Use actual paid date for paid payments
           paymentDate = parseISO(payment.paidDate);
-          paidMonth = paymentDate.getMonth() + 1; // 1-indexed
-          paidYear = paymentDate.getFullYear();
+          displayMonth = paymentDate.getMonth() + 1; // Convert 0-indexed to 1-indexed
+          displayYear = paymentDate.getFullYear();
         } else {
           // Use scheduled month for unpaid payments
-          paymentDate = new Date(payment.year, payment.month - 1, 15);
-          paidMonth = payment.month;
-          paidYear = payment.year;
+          // payment.month is 0-indexed in DB, so use directly for Date constructor
+          paymentDate = new Date(payment.year, payment.month, 15);
+          displayMonth = payment.month + 1; // Convert to 1-indexed for display
+          displayYear = payment.year;
         }
         
         if (isWithinInterval(paymentDate, { start, end })) {
           paymentsInRange.push({
             isPaid: payment.isPaid,
             amount: payment.amount,
-            month: payment.month, // Scheduled month
+            month: payment.month, // Scheduled month (0-indexed from DB)
             year: payment.year, // Scheduled year
-            paidMonth, // Actual paid month (for chart)
-            paidYear, // Actual paid year (for chart)
+            paidMonth: displayMonth, // 1-indexed for chart display
+            paidYear: displayYear,
             studentName: student.fullName,
             course: student.course,
           });
