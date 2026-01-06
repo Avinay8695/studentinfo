@@ -2,7 +2,7 @@ import { Student, MonthlyPayment } from '@/types/student';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Check, X, Calendar, IndianRupee, User, GraduationCap, Clock, Lock, Receipt } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { generateReceiptFromPayment } from '@/utils/generateReceipt';
@@ -152,7 +152,7 @@ export function MonthlyPaymentTracker({
                         </p>
                         {payment.isPaid && payment.paidDate && (
                           <p className="text-xs text-emerald-600 mt-1">
-                            Paid on {format(new Date(payment.paidDate), 'dd MMM yyyy')}
+                            Paid on {format(parseISO(payment.paidDate), 'dd MMM yyyy')}
                           </p>
                         )}
                       </div>
