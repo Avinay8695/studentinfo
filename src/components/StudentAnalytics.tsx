@@ -41,13 +41,14 @@ export function StudentAnalytics({ student, isOpen, onClose }: StudentAnalyticsP
   const amountProgress = totalAmount > 0 ? (totalPaid / totalAmount) * 100 : 0;
 
   const enrollmentDate = new Date(student.enrollmentDate);
-  const expectedEndDate = addMonths(enrollmentDate, student.courseDuration);
+  const courseDuration = student.courseDuration || 1; // Fallback to 1 to prevent division by zero
+  const expectedEndDate = addMonths(enrollmentDate, courseDuration);
   const today = new Date();
   
   const courseCompleted = today >= expectedEndDate;
   const daysRemaining = courseCompleted ? 0 : differenceInDays(expectedEndDate, today);
-  const monthsCompleted = Math.min(differenceInMonths(today, enrollmentDate), student.courseDuration);
-  const courseProgress = (monthsCompleted / student.courseDuration) * 100;
+  const monthsCompleted = Math.min(differenceInMonths(today, enrollmentDate), courseDuration);
+  const courseProgress = (monthsCompleted / courseDuration) * 100;
 
   // Find next due payment
   const nextDuePayment = unpaidPayments[0];

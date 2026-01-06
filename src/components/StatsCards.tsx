@@ -19,8 +19,9 @@ export function StatsCards({ stats }: StatsCardsProps) {
     }).format(amount);
   };
 
-  const collectionRate = stats.total > 0 
-    ? Math.round((stats.paid / stats.total) * 100) 
+  // Collection rate based on money collected, not student count
+  const collectionRate = stats.totalFees > 0 
+    ? Math.round((stats.paidFees / stats.totalFees) * 100) 
     : 0;
 
   const pendingFees = stats.totalFees - stats.paidFees;
