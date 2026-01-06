@@ -13,7 +13,6 @@ import {
   Eye, 
   EyeOff, 
   ArrowRight,
-  Quote,
   Shield,
   Zap,
   Users
@@ -212,22 +211,6 @@ export default function Auth() {
             </div>
           </div>
 
-          {/* Bottom - Testimonial */}
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/10 max-w-md">
-            <Quote className="w-8 h-8 text-primary/80 mb-3" />
-            <p className="text-white/90 text-lg leading-relaxed mb-4">
-              "This platform has transformed how we manage our institute. The fee tracking and analytics features are exceptional!"
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-lg">
-                RK
-              </div>
-              <div>
-                <p className="text-white font-semibold">Rajesh Kumar</p>
-                <p className="text-white/60 text-sm">Institute Director</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

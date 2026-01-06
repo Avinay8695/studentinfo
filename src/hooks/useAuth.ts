@@ -122,8 +122,28 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      // Clear local state regardless of error (session may already be invalid)
+      setState({
+        user: null,
+        session: null,
+        role: null,
+        fullName: null,
+        loading: false,
+      });
+      return { error: null };
+    } catch {
+      // Force clear state even on error
+      setState({
+        user: null,
+        session: null,
+        role: null,
+        fullName: null,
+        loading: false,
+      });
+      return { error: null };
+    }
   };
 
   return {
