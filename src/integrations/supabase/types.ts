@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          performed_by: string | null
+          performed_by_name: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          performed_by?: string | null
+          performed_by_name: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          performed_by?: string | null
+          performed_by_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_payments: {
         Row: {
           amount: number
