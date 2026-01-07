@@ -1,4 +1,4 @@
-import { Sparkles, LogOut, User, Shield, Users } from 'lucide-react';
+import { Sparkles, LogOut, User, Shield, Users, History } from 'lucide-react';
 import logoImage from '@/assets/logo-success-desirous.jpg';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
@@ -141,6 +141,13 @@ export function Header() {
                         >
                           <Users className="w-4 h-4 mr-2" />
                           User Management
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => navigate('/audit-logs')}
+                          className="cursor-pointer min-h-[44px]"
+                        >
+                          <History className="w-4 h-4 mr-2" />
+                          Activity History
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                       </>
