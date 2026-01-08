@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { UserPlus, RotateCcw, Save, Pencil, GraduationCap, Clock, CalendarDays, Loader2 } from 'lucide-react';
+import { UserPlus, RotateCcw, Save, Pencil, GraduationCap, Clock, CalendarDays, Loader2, Lock } from 'lucide-react';
 import { COURSES, COURSE_CATEGORIES, getCourseByName } from '@/data/courses';
 import { generateMonthlyPayments } from '@/hooks/useStudentsQuery';
 import { format } from 'date-fns';
@@ -20,9 +20,12 @@ interface StudentFormProps {
   onUpdate: (id: string, data: Omit<Student, 'id' | 'createdAt' | 'updatedAt'>) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  isAdmin?: boolean;
 }
 
-export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, isSubmitting = false }: StudentFormProps) {
+export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, isSubmitting = false, isAdmin = false }: StudentFormProps) {
+  const isEditing = !!editingStudent;
+  const isReadOnly = isEditing && !isAdmin;
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
     defaultValues: {
@@ -138,6 +141,14 @@ export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, i
         </div>
       </div>
 
+      {/* Read-Only Notice for Regular Users */}
+      {isReadOnly && (
+        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-4 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-amber-600" />
+          <p className="text-sm text-amber-700">Only admins can edit student information. Viewing in read-only mode.</p>
+        </div>
+      )}
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -154,7 +165,8 @@ export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, i
                     <Input
                       {...field}
                       placeholder="Enter student's full name"
-                      className="input-focus"
+                      disabled={isReadOnly}
+                      className={`input-focus ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
                   </FormControl>
                   <FormMessage />
@@ -172,9 +184,9 @@ export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, i
                     <GraduationCap className="w-4 h-4 text-primary" />
                     Course <span className="text-destructive">*</span>
                   </FormLabel>
-                  <Select value={field.value} onValueChange={handleCourseChange}>
+                  <Select value={field.value} onValueChange={handleCourseChange} disabled={isReadOnly}>
                     <FormControl>
-                      <SelectTrigger className="input-focus">
+                      <SelectTrigger className={`input-focus ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}>
                         <SelectValue placeholder="Select a course" />
                       </SelectTrigger>
                     </FormControl>
@@ -216,7 +228,8 @@ export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, i
                     <Input
                       {...field}
                       type="date"
-                      className="input-focus"
+                      disabled={isReadOnly}
+                      className={`input-focus ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
                   </FormControl>
                   <FormMessage />
@@ -235,7 +248,8 @@ export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, i
                     <Input
                       {...field}
                       placeholder="e.g., 2025 Batch"
-                      className="input-focus"
+                      disabled={isReadOnly}
+                      className={`input-focus ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
                   </FormControl>
                   <FormMessage />
@@ -275,7 +289,8 @@ export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, i
                     <Input
                       {...field}
                       placeholder="Enter mobile number"
-                      className="input-focus"
+                      disabled={isReadOnly}
+                      className={`input-focus ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
                   </FormControl>
                   <FormMessage />
@@ -297,7 +312,8 @@ export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, i
                       {...field}
                       placeholder="Enter address (optional)"
                       rows={3}
-                      className="input-focus resize-none"
+                      disabled={isReadOnly}
+                      className={`input-focus resize-none ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
                   </FormControl>
                   <FormMessage />
@@ -317,7 +333,8 @@ export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, i
                       {...field}
                       placeholder="Any additional notes (optional)"
                       rows={3}
-                      className="input-focus resize-none"
+                      disabled={isReadOnly}
+                      className={`input-focus resize-none ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
                   </FormControl>
                   <FormMessage />
@@ -326,20 +343,22 @@ export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, i
             />
           </div>
 
-          {/* Buttons */}
+          {/* Buttons - Hide save button for read-only mode */}
           <div className="flex gap-3 pt-3">
-            <Button 
-              type="submit" 
-              className="btn-glow px-6 font-medium"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              {editingStudent ? 'Update Student' : 'Save Student'}
-            </Button>
+            {!isReadOnly && (
+              <Button 
+                type="submit" 
+                className="btn-glow px-6 font-medium"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                {editingStudent ? 'Update Student' : 'Save Student'}
+              </Button>
+            )}
             <Button 
               type="button" 
               variant="outline" 
@@ -348,7 +367,7 @@ export function StudentFormNew({ editingStudent, onSubmit, onUpdate, onCancel, i
               disabled={isSubmitting}
             >
               <RotateCcw className="w-4 h-4 mr-2" />
-              Clear
+              {isReadOnly ? 'Close' : 'Clear'}
             </Button>
           </div>
         </form>

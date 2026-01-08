@@ -190,6 +190,7 @@ const Index = () => {
                   onUpdate={handleUpdateStudent}
                   onCancel={handleCancelEdit}
                   isSubmitting={isAdding || isUpdating}
+                  isAdmin={isAdmin}
                 />
               )}
             </CollapsibleContent>
