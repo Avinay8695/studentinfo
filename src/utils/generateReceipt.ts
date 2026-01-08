@@ -1,4 +1,5 @@
 import logoImg from '@/assets/logo-success-desirous.jpg';
+import { escapeHtml } from './htmlEscape';
 
 interface ReceiptData {
   studentName: string;
@@ -291,16 +292,16 @@ export function generatePaymentReceipt(data: ReceiptData) {
           <div class="details-grid">
             <div class="detail-row">
               <span class="detail-label">Student Name</span>
-              <span class="detail-value">${data.studentName}</span>
+              <span class="detail-value">${escapeHtml(data.studentName)}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Course</span>
-              <span class="detail-value">${data.course}</span>
+              <span class="detail-value">${escapeHtml(data.course)}</span>
             </div>
             ${data.batch ? `
             <div class="detail-row">
               <span class="detail-label">Batch</span>
-              <span class="detail-value">${data.batch}</span>
+              <span class="detail-value">${escapeHtml(data.batch)}</span>
             </div>
             ` : ''}
             <div class="detail-row">

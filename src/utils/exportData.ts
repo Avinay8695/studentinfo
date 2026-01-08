@@ -1,5 +1,6 @@
 import { Student } from '@/types/student';
 import logoImg from '@/assets/logo-success-desirous.jpg';
+import { escapeHtml } from './htmlEscape';
 
 export function exportToCSV(students: Student[], filename: string = 'students_data') {
   // Define headers
@@ -417,9 +418,9 @@ export function generatePrintableReport(students: Student[]) {
                 return `
                   <tr>
                     <td>${i + 1}</td>
-                    <td class="student-name">${s.fullName}</td>
-                    <td><span class="course-badge">${s.course}</span></td>
-                    <td>${s.batch || '-'}</td>
+                    <td class="student-name">${escapeHtml(s.fullName)}</td>
+                    <td><span class="course-badge">${escapeHtml(s.course)}</span></td>
+                    <td>${escapeHtml(s.batch) || '-'}</td>
                     <td class="amount">₹${s.feesAmount.toLocaleString('en-IN')}</td>
                     <td class="amount paid">₹${paid.toLocaleString('en-IN')}</td>
                     <td class="amount pending">₹${pending.toLocaleString('en-IN')}</td>
@@ -429,7 +430,7 @@ export function generatePrintableReport(students: Student[]) {
                         ${s.feesStatus === 'paid' ? 'PAID' : 'PENDING'}
                       </span>
                     </td>
-                    <td>${s.mobile || '-'}</td>
+                    <td>${escapeHtml(s.mobile) || '-'}</td>
                   </tr>
                 `;
               }).join('')}
