@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
-import { UserPlus, RotateCcw, Save, Pencil, GraduationCap, Clock, CalendarDays } from 'lucide-react';
+import { UserPlus, RotateCcw, Save, Pencil, GraduationCap, Clock, CalendarDays, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { COURSES, COURSE_CATEGORIES, getCourseByName } from '@/data/courses';
 import { generateMonthlyPayments } from '@/hooks/useStudents';
@@ -16,6 +16,7 @@ interface StudentFormProps {
   onSubmit: (data: Omit<Student, 'id' | 'createdAt' | 'updatedAt'>) => void;
   onUpdate: (id: string, data: Omit<Student, 'id' | 'createdAt' | 'updatedAt'>) => void;
   onCancel: () => void;
+  isAdmin?: boolean;
 }
 
 type FormData = {
@@ -48,9 +49,12 @@ const initialFormState: FormData = {
   monthlyPayments: [],
 };
 
-export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: StudentFormProps) {
+export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel, isAdmin = false }: StudentFormProps) {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const isEditing = !!editingStudent;
+  const isReadOnly = isEditing && !isAdmin;
 
   useEffect(() => {
     if (editingStudent) {
@@ -163,6 +167,14 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
         </div>
       </div>
 
+      {/* Read-Only Notice for Regular Users */}
+      {isReadOnly && (
+        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-4 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-amber-600" />
+          <p className="text-sm text-amber-700">Only admins can edit student information. Viewing in read-only mode.</p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Full Name */}
@@ -175,7 +187,8 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               placeholder="Enter student's full name"
-              className={`input-focus ${errors.fullName ? 'border-destructive focus:ring-destructive/20' : ''}`}
+              disabled={isReadOnly}
+              className={`input-focus ${errors.fullName ? 'border-destructive focus:ring-destructive/20' : ''} ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
             />
             {errors.fullName && <p className="text-xs text-destructive">{errors.fullName}</p>}
           </div>
@@ -186,8 +199,8 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
               <GraduationCap className="w-4 h-4 text-primary" />
               Course <span className="text-destructive">*</span>
             </Label>
-            <Select value={formData.course} onValueChange={handleCourseChange}>
-              <SelectTrigger className={`input-focus ${errors.course ? 'border-destructive' : ''}`}>
+            <Select value={formData.course} onValueChange={handleCourseChange} disabled={isReadOnly}>
+              <SelectTrigger className={`input-focus ${errors.course ? 'border-destructive' : ''} ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}>
                 <SelectValue placeholder="Select a course" />
               </SelectTrigger>
               <SelectContent className="max-h-[300px]">
@@ -223,7 +236,8 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
               type="date"
               value={formData.enrollmentDate}
               onChange={(e) => setFormData({ ...formData, enrollmentDate: e.target.value })}
-              className={`input-focus ${errors.enrollmentDate ? 'border-destructive' : ''}`}
+              disabled={isReadOnly}
+              className={`input-focus ${errors.enrollmentDate ? 'border-destructive' : ''} ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
             />
             {errors.enrollmentDate && <p className="text-xs text-destructive">{errors.enrollmentDate}</p>}
           </div>
@@ -236,7 +250,8 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
               value={formData.batch}
               onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
               placeholder="e.g., 2025 Batch"
-              className="input-focus"
+              disabled={isReadOnly}
+              className={`input-focus ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
             />
           </div>
 
@@ -269,7 +284,8 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
               value={formData.mobile}
               onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
               placeholder="Enter mobile number"
-              className="input-focus"
+              disabled={isReadOnly}
+              className={`input-focus ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
             />
           </div>
         </div>
@@ -284,7 +300,8 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               placeholder="Enter address (optional)"
               rows={3}
-              className="input-focus resize-none"
+              disabled={isReadOnly}
+              className={`input-focus resize-none ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
             />
           </div>
 
@@ -297,20 +314,23 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Any additional notes (optional)"
               rows={3}
-              className="input-focus resize-none"
+              disabled={isReadOnly}
+              className={`input-focus resize-none ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
             />
           </div>
         </div>
 
-        {/* Buttons */}
+        {/* Buttons - Hide save button for read-only mode */}
         <div className="flex gap-3 pt-3">
-          <Button 
-            type="submit" 
-            className="btn-glow px-6 font-medium"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {editingStudent ? 'Update Student' : 'Save Student'}
-          </Button>
+          {!isReadOnly && (
+            <Button 
+              type="submit" 
+              className="btn-glow px-6 font-medium"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {editingStudent ? 'Update Student' : 'Save Student'}
+            </Button>
+          )}
           <Button 
             type="button" 
             variant="outline" 
@@ -318,7 +338,7 @@ export function StudentForm({ editingStudent, onSubmit, onUpdate, onCancel }: St
             className="px-6 font-medium"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
-            Clear
+            {isReadOnly ? 'Close' : 'Clear'}
           </Button>
         </div>
       </form>
