@@ -131,10 +131,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
-      {/* Background pattern */}
+      {/* Premium background effects */}
       <div className="fixed inset-0 pattern-dots pointer-events-none" />
-      <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl pointer-events-none animate-pulse-slow" />
+      <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 dark:bg-accent/10 rounded-full blur-3xl pointer-events-none animate-pulse-slow" style={{ animationDelay: '2s' }} />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gold/3 dark:bg-gold/5 rounded-full blur-3xl pointer-events-none" />
+      
+      {/* Gradient overlay for dark mode depth */}
+      <div className="fixed inset-0 bg-gradient-to-b from-transparent via-transparent to-background/50 dark:to-background/80 pointer-events-none" />
       
       <Header />
 
@@ -165,10 +169,10 @@ const Index = () => {
             <CollapsibleTrigger asChild>
               <Button
                 variant={isFormOpen ? "secondary" : "default"}
-                className={`w-full py-6 text-lg font-semibold transition-all duration-300 ${
+                className={`w-full py-6 text-lg font-semibold transition-all duration-500 ${
                   isFormOpen 
-                    ? 'bg-muted hover:bg-muted/80 text-muted-foreground' 
-                    : 'btn-glow bg-gradient-to-r from-primary to-accent hover:opacity-90'
+                    ? 'bg-muted hover:bg-muted/80 text-muted-foreground border border-border' 
+                    : 'btn-glow bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] hover:bg-[length:100%_100%] transition-all duration-700'
                 }`}
               >
                 <UserPlus className="w-5 h-5 mr-2" />

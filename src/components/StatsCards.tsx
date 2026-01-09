@@ -1,4 +1,4 @@
-import { Users, CheckCircle, XCircle, TrendingUp, IndianRupee, Wallet } from 'lucide-react';
+import { Users, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
 
 interface StatsCardsProps {
   stats: {
@@ -19,7 +19,6 @@ export function StatsCards({ stats }: StatsCardsProps) {
     }).format(amount);
   };
 
-  // Collection rate based on money collected, not student count
   const collectionRate = stats.totalFees > 0 
     ? Math.round((stats.paidFees / stats.totalFees) * 100) 
     : 0;
@@ -32,9 +31,10 @@ export function StatsCards({ stats }: StatsCardsProps) {
       value: stats.total,
       label: 'Total Students',
       sublabel: 'Enrolled',
-      gradient: 'from-blue-500 to-blue-600',
-      bgGradient: 'from-blue-500/10 to-blue-600/10',
-      borderColor: 'border-blue-500/20',
+      gradient: 'from-blue-500 to-cyan-500',
+      glowColor: 'blue',
+      borderColor: 'border-blue-500/20 dark:border-blue-400/30',
+      iconBg: 'bg-gradient-to-br from-blue-500 to-cyan-500',
       delay: '0s',
     },
     {
@@ -42,9 +42,10 @@ export function StatsCards({ stats }: StatsCardsProps) {
       value: stats.paid,
       label: 'Fees Paid',
       sublabel: formatCurrency(stats.paidFees),
-      gradient: 'from-emerald-500 to-emerald-600',
-      bgGradient: 'from-emerald-500/10 to-emerald-600/10',
-      borderColor: 'border-emerald-500/20',
+      gradient: 'from-emerald-500 to-teal-500',
+      glowColor: 'emerald',
+      borderColor: 'border-emerald-500/20 dark:border-emerald-400/30',
+      iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-500',
       delay: '0.1s',
     },
     {
@@ -52,9 +53,10 @@ export function StatsCards({ stats }: StatsCardsProps) {
       value: stats.notPaid,
       label: 'Fees Pending',
       sublabel: formatCurrency(pendingFees),
-      gradient: 'from-rose-500 to-rose-600',
-      bgGradient: 'from-rose-500/10 to-rose-600/10',
-      borderColor: 'border-rose-500/20',
+      gradient: 'from-rose-500 to-pink-500',
+      glowColor: 'rose',
+      borderColor: 'border-rose-500/20 dark:border-rose-400/30',
+      iconBg: 'bg-gradient-to-br from-rose-500 to-pink-500',
       delay: '0.2s',
     },
     {
@@ -62,38 +64,55 @@ export function StatsCards({ stats }: StatsCardsProps) {
       value: `${collectionRate}%`,
       label: 'Collection Rate',
       sublabel: 'Success ratio',
-      gradient: 'from-violet-500 to-purple-600',
-      bgGradient: 'from-violet-500/10 to-purple-600/10',
-      borderColor: 'border-violet-500/20',
+      gradient: 'from-violet-500 to-purple-500',
+      glowColor: 'violet',
+      borderColor: 'border-violet-500/20 dark:border-violet-400/30',
+      iconBg: 'bg-gradient-to-br from-violet-500 to-purple-500',
       delay: '0.3s',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-      {cards.map((card) => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-8">
+      {cards.map((card, index) => (
         <div 
           key={card.label}
-          className={`relative overflow-hidden bg-gradient-to-br ${card.bgGradient} rounded-2xl border ${card.borderColor} p-5 animate-fade-in card-elevated-hover`}
-          style={{ animationDelay: card.delay }}
+          className={`stats-card group ${card.borderColor}`}
+          style={{ 
+            animationDelay: card.delay,
+            animation: 'fadeIn 0.5s ease-out forwards, slideUp 0.5s ease-out forwards'
+          }}
         >
-          {/* Decorative circle */}
-          <div className={`absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br ${card.gradient} opacity-10 rounded-full blur-xl`} />
+          {/* Glow effect for dark mode */}
+          <div className={`absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-br ${card.gradient} opacity-0 dark:opacity-20 rounded-full blur-2xl transition-opacity duration-500 group-hover:opacity-10 dark:group-hover:opacity-30`} />
+          
+          {/* Subtle shine */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
           
           <div className="relative z-10">
-            <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${card.gradient} shadow-lg mb-4`}>
+            {/* Icon with glow */}
+            <div className={`icon-glow inline-flex p-3 rounded-xl ${card.iconBg} shadow-lg mb-4 transition-transform duration-300 group-hover:scale-110`}>
               <card.icon className="w-5 h-5 text-white" />
             </div>
-            <p className="text-3xl font-bold text-card-foreground font-display tracking-tight">
+            
+            {/* Value */}
+            <p className="number-premium">
               {card.value}
             </p>
-            <p className="text-sm font-semibold text-card-foreground/80 mt-1">
+            
+            {/* Label */}
+            <p className="text-sm font-semibold text-card-foreground/80 mt-1.5">
               {card.label}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            
+            {/* Sublabel */}
+            <p className="text-xs text-muted-foreground mt-0.5 font-medium">
               {card.sublabel}
             </p>
           </div>
+
+          {/* Bottom accent line */}
+          <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-2xl`} />
         </div>
       ))}
     </div>
