@@ -3,6 +3,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { Student, FeesFilter, MonthlyPayment } from '@/types/student';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logStudentCreate, logStudentUpdate, logStudentDelete, logPaymentUpdate } from '@/utils/logger';
 
 // Helper to generate monthly payments based on enrollment date, duration, and total fee
 export function generateMonthlyPayments(
@@ -149,11 +150,19 @@ async function addStudentToDB(studentData: Omit<Student, 'id' | 'createdAt' | 'u
     if (paymentsError) throw paymentsError;
   }
 
+  // Log activity
+  await logStudentCreate(newStudent.id, {
+    full_name: studentData.fullName,
+    course: studentData.course,
+    batch: studentData.batch,
+    fees_amount: studentData.feesAmount,
+  });
+
   return newStudent;
 }
 
 // Update student mutation
-async function updateStudentInDB({ id, data }: { id: string; data: Omit<Student, 'id' | 'createdAt' | 'updatedAt'> }) {
+async function updateStudentInDB({ id, data, previousData }: { id: string; data: Omit<Student, 'id' | 'createdAt' | 'updatedAt'>; previousData?: Student }) {
   const { error: studentError } = await supabase
     .from('students')
     .update({
@@ -170,11 +179,41 @@ async function updateStudentInDB({ id, data }: { id: string; data: Omit<Student,
     .eq('id', id);
 
   if (studentError) throw studentError;
+
+  // Log activity
+  if (previousData) {
+    await logStudentUpdate(
+      id,
+      {
+        full_name: previousData.fullName,
+        course: previousData.course,
+        batch: previousData.batch,
+        fees_amount: previousData.feesAmount,
+      },
+      {
+        full_name: data.fullName,
+        course: data.course,
+        batch: data.batch,
+        fees_amount: data.feesAmount,
+      }
+    );
+  }
+
   return { id };
 }
 
 // Delete student mutation
-async function deleteStudentFromDB(id: string) {
+async function deleteStudentFromDB({ id, studentData }: { id: string; studentData?: Student }) {
+  // Log activity before deletion
+  if (studentData) {
+    await logStudentDelete(id, {
+      full_name: studentData.fullName,
+      course: studentData.course,
+      batch: studentData.batch,
+      fees_amount: studentData.feesAmount,
+    });
+  }
+
   const { error } = await supabase
     .from('students')
     .delete()
@@ -185,7 +224,7 @@ async function deleteStudentFromDB(id: string) {
 }
 
 // Update payment status mutation
-async function updatePaymentStatusInDB({ studentId, paymentIndex, isPaid }: { studentId: string; paymentIndex: number; isPaid: boolean }) {
+async function updatePaymentStatusInDB({ studentId, paymentIndex, isPaid, studentName }: { studentId: string; paymentIndex: number; isPaid: boolean; studentName?: string }) {
   const { data: payments, error: fetchError } = await supabase
     .from('monthly_payments')
     .select('*')
@@ -196,15 +235,26 @@ async function updatePaymentStatusInDB({ studentId, paymentIndex, isPaid }: { st
   if (fetchError) throw fetchError;
 
   if (payments && payments[paymentIndex]) {
+    const payment = payments[paymentIndex];
+    const previousStatus = payment.is_paid;
+    
     const { error: updateError } = await supabase
       .from('monthly_payments')
       .update({
         is_paid: isPaid,
         paid_date: isPaid ? new Date().toISOString().split('T')[0] : null,
       })
-      .eq('id', payments[paymentIndex].id);
+      .eq('id', payment.id);
 
     if (updateError) throw updateError;
+
+    // Log payment update
+    await logPaymentUpdate(
+      payment.id,
+      studentName || 'Unknown Student',
+      { is_paid: previousStatus, month: payment.month, year: payment.year },
+      { is_paid: isPaid, month: payment.month, year: payment.year }
+    );
 
     const updatedPayments = payments.map((p, i) => 
       i === paymentIndex ? { ...p, is_paid: isPaid } : p
@@ -290,17 +340,19 @@ export function useStudentsQuery() {
   }, [addMutation]);
 
   const updateStudent = useCallback(async (id: string, data: Omit<Student, 'id' | 'createdAt' | 'updatedAt'>) => {
-    await updateMutation.mutateAsync({ id, data });
+    const previousData = students.find(s => s.id === id);
+    await updateMutation.mutateAsync({ id, data, previousData });
     return true;
-  }, [updateMutation]);
+  }, [updateMutation, students]);
 
   const deleteStudent = useCallback(async (id: string) => {
-    await deleteMutation.mutateAsync(id);
+    const studentData = students.find(s => s.id === id);
+    await deleteMutation.mutateAsync({ id, studentData });
     return true;
-  }, [deleteMutation]);
+  }, [deleteMutation, students]);
 
-  const updatePaymentStatus = useCallback(async (studentId: string, paymentIndex: number, isPaid: boolean) => {
-    await updatePaymentMutation.mutateAsync({ studentId, paymentIndex, isPaid });
+  const updatePaymentStatus = useCallback(async (studentId: string, paymentIndex: number, isPaid: boolean, studentName?: string) => {
+    await updatePaymentMutation.mutateAsync({ studentId, paymentIndex, isPaid, studentName });
   }, [updatePaymentMutation]);
 
   const startEditing = useCallback((student: Student) => {

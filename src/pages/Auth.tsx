@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import logoImage from '@/assets/logo-success-desirous.jpg';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
+import { logUserLogin } from '@/utils/logger';
 
 const emailSchema = z.string().trim().email('Invalid email address').max(255, 'Email too long');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password too long');
@@ -95,6 +96,9 @@ export default function Auth() {
             : error.message);
           return;
         }
+        
+        // Log login activity
+        await logUserLogin();
         
         toast.success('Welcome back!');
         navigate('/', { replace: true });
