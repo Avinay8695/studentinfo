@@ -10,7 +10,7 @@ interface MonthlyPaymentTrackerProps {
   student: Student | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdatePayment: (studentId: string, paymentIndex: number, isPaid: boolean) => void;
+  onUpdatePayment: (studentId: string, paymentIndex: number, isPaid: boolean, studentName?: string) => void;
   isAdmin?: boolean;
 }
 
@@ -40,7 +40,7 @@ export function MonthlyPaymentTracker({
       return;
     }
     
-    onUpdatePayment(student.id, index, !currentStatus);
+    onUpdatePayment(student.id, index, !currentStatus, student.fullName);
     toast.success(!currentStatus ? 'Payment marked as paid' : 'Payment marked as pending');
   };
 
