@@ -29,26 +29,28 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm">
+    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm dark:shadow-primary/5">
       <div className="gradient-primary py-4 sm:py-6 px-4 relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 right-0 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 animate-pulse-slow" />
           <div className="absolute bottom-0 left-0 w-[150px] sm:w-[300px] h-[150px] sm:h-[300px] bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4 animate-pulse-slow" style={{ animationDelay: '1s' }} />
-          {/* Grid pattern */}
+          {/* Premium grid pattern */}
           <div className="absolute inset-0 opacity-10" style={{ 
             backgroundImage: 'linear-gradient(90deg, white 1px, transparent 1px), linear-gradient(white 1px, transparent 1px)',
-            backgroundSize: '40px 40px'
+            backgroundSize: '48px 48px'
           }} />
+          {/* Gradient overlay for depth */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10" />
         </div>
         
         <div className="container max-w-7xl mx-auto relative z-10">
           <div className="flex items-center justify-between gap-2 sm:gap-3">
             {/* Logo and Title */}
             <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-              <div className="relative flex-shrink-0">
-                <div className="absolute inset-0 bg-white/20 rounded-lg sm:rounded-xl blur-lg animate-pulse-slow" />
-                <div className="relative w-9 h-9 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl overflow-hidden border-2 border-white/30 shadow-xl">
+              <div className="relative flex-shrink-0 group">
+                <div className="absolute inset-0 bg-white/30 dark:bg-gold/30 rounded-lg sm:rounded-xl blur-lg animate-pulse-slow group-hover:bg-gold/40 transition-colors duration-500" />
+                <div className="relative w-9 h-9 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl overflow-hidden border-2 border-white/40 shadow-xl transition-transform duration-300 group-hover:scale-105">
                   <img 
                     src={logoImage} 
                     alt="Success Desirous Logo" 
@@ -58,12 +60,11 @@ export function Header() {
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1 sm:gap-2">
-                  <h1 className="text-lg sm:text-2xl lg:text-3xl font-extrabold tracking-tight font-display truncate text-primary-foreground">
+                  <h1 className="text-lg sm:text-2xl lg:text-3xl font-extrabold tracking-tight font-display truncate text-primary-foreground drop-shadow-sm">
                     Success Desirous
                   </h1>
                   <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300 animate-pulse flex-shrink-0" />
                 </div>
-                {/* Hide subtitle on mobile */}
                 <p className="hidden sm:block text-primary-foreground/80 text-xs sm:text-sm font-semibold tracking-wider uppercase truncate">
                   Student Management System
                 </p>
@@ -72,14 +73,14 @@ export function Header() {
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
-              {/* Desktop only info - Hidden on mobile/tablet */}
+              {/* Desktop only info */}
               <div className="hidden lg:flex items-center gap-4">
                 <div className="text-right mr-2">
                   <div className="flex items-center justify-end gap-2 mb-0.5">
                     <p className="text-xs text-primary-foreground/60 uppercase tracking-wider">Welcome</p>
                     <Badge 
                       variant={isAdmin ? 'default' : 'secondary'}
-                      className={`text-[10px] px-1.5 py-0 ${isAdmin ? 'bg-yellow-500 text-yellow-950 hover:bg-yellow-400' : 'bg-white/20 text-primary-foreground hover:bg-white/30'}`}
+                      className={`text-[10px] px-1.5 py-0 transition-all duration-300 ${isAdmin ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-950 hover:from-yellow-300 hover:to-amber-400 shadow-lg shadow-yellow-500/25' : 'bg-white/20 text-primary-foreground hover:bg-white/30 backdrop-blur-sm'}`}
                     >
                       {isAdmin ? (
                         <><Shield className="w-2.5 h-2.5 mr-0.5" /> Admin</>
