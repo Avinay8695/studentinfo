@@ -92,6 +92,87 @@ const entityConfig = {
   USER: { icon: User, label: 'User' },
 };
 
+// Month names in Hindi/English for payment display
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+// Human readable field labels
+const fieldLabels: Record<string, string> = {
+  full_name: 'Name',
+  course: 'Course',
+  batch: 'Batch',
+  mobile_number: 'Mobile Number',
+  fees_amount: 'Total Fees',
+  fees_status: 'Payment Status',
+  monthly_fee: 'Monthly Fee',
+  duration_months: 'Course Duration',
+  enrollment_date: 'Enrollment Date',
+  is_paid: 'Payment Status',
+  month: 'Month',
+  year: 'Year',
+  amount: 'Amount',
+  paid_date: 'Paid Date',
+};
+
+// Format value for display
+function formatValue(key: string, value: unknown): string {
+  if (value === null || value === undefined) return 'Not set';
+  
+  if (key === 'is_paid') {
+    return value === true ? '✅ Paid' : '❌ Unpaid';
+  }
+  if (key === 'month' && typeof value === 'number') {
+    return monthNames[value - 1] || `Month ${value}`;
+  }
+  if (key === 'fees_status') {
+    const statusMap: Record<string, string> = {
+      paid: '✅ Fully Paid',
+      partial: '⏳ Partially Paid',
+      pending: '❌ Pending'
+    };
+    return statusMap[value as string] || String(value);
+  }
+  if (key === 'fees_amount' || key === 'monthly_fee' || key === 'amount') {
+    return `₹${Number(value).toLocaleString('en-IN')}`;
+  }
+  if (key === 'duration_months') {
+    return `${value} months`;
+  }
+  if (key === 'enrollment_date' || key === 'paid_date') {
+    try {
+      return format(parseISO(value as string), 'dd MMM yyyy');
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+
+// Format changes for display
+function formatChanges(before?: Record<string, unknown>, after?: Record<string, unknown>): { field: string; from: string; to: string }[] {
+  if (!before && !after) return [];
+  
+  const changes: { field: string; from: string; to: string }[] = [];
+  const allKeys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
+  
+  allKeys.forEach(key => {
+    const beforeVal = before?.[key];
+    const afterVal = after?.[key];
+    
+    if (JSON.stringify(beforeVal) !== JSON.stringify(afterVal)) {
+      changes.push({
+        field: fieldLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        from: formatValue(key, beforeVal),
+        to: formatValue(key, afterVal)
+      });
+    }
+  });
+  
+  return changes;
+}
+
 function getDateGroup(dateStr: string): string {
   const date = parseISO(dateStr);
   if (isToday(date)) return 'Today';
@@ -315,6 +396,9 @@ export default function AuditLogs() {
                               <span className="font-semibold text-foreground">
                                 {log.performed_by_name}
                               </span>
+                              <Badge className="text-xs bg-primary/20 text-primary border-primary/30 hover:bg-primary/30">
+                                Admin
+                              </Badge>
                               <Badge variant="outline" className={cn("text-xs", action.color, action.borderColor)}>
                                 {action.label}
                               </Badge>
@@ -391,32 +475,69 @@ export default function AuditLogs() {
                 </div>
               )}
 
-              {/* Before/After Comparison */}
+              {/* Changes Summary - Human Readable */}
               {(selectedLog.details?.before || selectedLog.details?.after) && (
                 <div className="space-y-4">
-                  {selectedLog.details?.before && (
-                    <div>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-red-500" />
-                        Previous Values
-                      </h4>
-                      <pre className="p-4 rounded-lg bg-red-500/5 border border-red-500/20 text-xs overflow-x-auto">
-                        {JSON.stringify(selectedLog.details.before, null, 2)}
-                      </pre>
-                    </div>
-                  )}
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Pencil className="w-4 h-4" />
+                    Changes Made
+                  </h4>
                   
-                  {selectedLog.details?.after && (
-                    <div>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                        New Values
-                      </h4>
-                      <pre className="p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-xs overflow-x-auto">
-                        {JSON.stringify(selectedLog.details.after, null, 2)}
-                      </pre>
+                  {formatChanges(
+                    selectedLog.details?.before as Record<string, unknown>,
+                    selectedLog.details?.after as Record<string, unknown>
+                  ).length > 0 ? (
+                    <div className="space-y-3">
+                      {formatChanges(
+                        selectedLog.details?.before as Record<string, unknown>,
+                        selectedLog.details?.after as Record<string, unknown>
+                      ).map((change, idx) => (
+                        <div key={idx} className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                          <div className="text-xs font-medium text-muted-foreground mb-2">
+                            {change.field}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="px-2 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/20">
+                              {change.from}
+                            </span>
+                            <span className="text-muted-foreground">→</span>
+                            <span className="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              {change.to}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  ) : selectedLog.action_type === 'CREATE' && selectedLog.details?.after ? (
+                    <div className="space-y-2">
+                      {Object.entries(selectedLog.details.after as Record<string, unknown>).map(([key, value]) => (
+                        <div key={key} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
+                          <span className="text-sm text-muted-foreground">
+                            {fieldLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </span>
+                          <span className="text-sm font-medium text-foreground">
+                            {formatValue(key, value)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : selectedLog.action_type === 'DELETE' && selectedLog.details?.before ? (
+                    <div className="p-4 rounded-lg bg-red-500/5 border border-red-500/20">
+                      <p className="text-sm text-red-400 mb-3">Deleted record details:</p>
+                      <div className="space-y-2">
+                        {Object.entries(selectedLog.details.before as Record<string, unknown>).map(([key, value]) => (
+                          <div key={key} className="flex justify-between items-center py-1">
+                            <span className="text-xs text-muted-foreground">
+                              {fieldLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            </span>
+                            <span className="text-xs text-foreground">
+                              {formatValue(key, value)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               )}
 
