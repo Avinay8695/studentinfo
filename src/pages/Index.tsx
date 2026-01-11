@@ -24,7 +24,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, loading: authLoading, user, isAdmin } = useAuth();
+  const { isAuthenticated, loading: authLoading, user, isAdmin, isApproved } = useAuth();
   
   const {
     students,
@@ -52,12 +52,16 @@ const Index = () => {
   const [analyticsStudentId, setAnalyticsStudentId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  // Redirect to auth if not authenticated
+  // Redirect to auth if not authenticated, or to pending-approval if not approved
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/auth', { replace: true });
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        navigate('/auth', { replace: true });
+      } else if (isApproved === false) {
+        navigate('/pending-approval', { replace: true });
+      }
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, isApproved, navigate]);
 
   // Open form when editing
   useEffect(() => {

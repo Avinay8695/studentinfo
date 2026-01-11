@@ -9,6 +9,7 @@ interface AuthState {
   session: Session | null;
   role: AppRole | null;
   fullName: string | null;
+  isApproved: boolean | null;
   loading: boolean;
 }
 
@@ -18,6 +19,7 @@ export function useAuth() {
     session: null,
     role: null,
     fullName: null,
+    isApproved: null,
     loading: true,
   });
 
@@ -37,7 +39,7 @@ export function useAuth() {
             fetchUserData(session.user.id);
           }, 0);
         } else {
-          setState(prev => ({ ...prev, role: null, fullName: null, loading: false }));
+          setState(prev => ({ ...prev, role: null, fullName: null, isApproved: null, loading: false }));
         }
       }
     );
@@ -71,7 +73,7 @@ export function useAuth() {
           .maybeSingle(),
         supabase
           .from('profiles')
-          .select('full_name')
+          .select('full_name, is_approved')
           .eq('user_id', userId)
           .maybeSingle()
       ]);
@@ -83,15 +85,41 @@ export function useAuth() {
         console.error('Error fetching profile:', profileResult.error);
       }
 
+      const role = (roleResult.data?.role as AppRole) || 'user';
+      // Admins are always considered approved
+      const isApproved = role === 'admin' ? true : (profileResult.data?.is_approved ?? false);
+
       setState(prev => ({
         ...prev,
-        role: (roleResult.data?.role as AppRole) || 'user',
+        role,
         fullName: profileResult.data?.full_name || null,
+        isApproved,
         loading: false,
       }));
     } catch (err) {
       console.error('Error fetching user data:', err);
-      setState(prev => ({ ...prev, role: 'user', fullName: null, loading: false }));
+      setState(prev => ({ ...prev, role: 'user', fullName: null, isApproved: false, loading: false }));
+    }
+  };
+
+  const refreshApprovalStatus = async (): Promise<boolean> => {
+    if (!state.user) return false;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_approved')
+        .eq('user_id', state.user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      const isApproved = state.role === 'admin' ? true : (data?.is_approved ?? false);
+      setState(prev => ({ ...prev, isApproved }));
+      return isApproved;
+    } catch (err) {
+      console.error('Error refreshing approval status:', err);
+      return false;
     }
   };
 
@@ -130,6 +158,7 @@ export function useAuth() {
         session: null,
         role: null,
         fullName: null,
+        isApproved: null,
         loading: false,
       });
       return { error: null };
@@ -140,6 +169,7 @@ export function useAuth() {
         session: null,
         role: null,
         fullName: null,
+        isApproved: null,
         loading: false,
       });
       return { error: null };
@@ -151,11 +181,13 @@ export function useAuth() {
     session: state.session,
     role: state.role,
     fullName: state.fullName,
+    isApproved: state.isApproved,
     loading: state.loading,
     isAuthenticated: !!state.session,
     isAdmin: state.role === 'admin',
     signUp,
     signIn,
     signOut,
+    refreshApprovalStatus,
   };
 }

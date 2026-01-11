@@ -27,7 +27,7 @@ const nameSchema = z.string().trim().min(2, 'Name must be at least 2 characters'
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { signIn, signUp, isAuthenticated, loading } = useAuth();
+  const { signIn, signUp, isAuthenticated, loading, isApproved } = useAuth();
   
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [formLoading, setFormLoading] = useState(false);
@@ -41,9 +41,13 @@ export default function Auth() {
 
   useEffect(() => {
     if (isAuthenticated && !loading) {
-      navigate('/', { replace: true });
+      if (isApproved === false) {
+        navigate('/pending-approval', { replace: true });
+      } else if (isApproved === true) {
+        navigate('/', { replace: true });
+      }
     }
-  }, [isAuthenticated, loading, navigate]);
+  }, [isAuthenticated, loading, isApproved, navigate]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -100,7 +104,7 @@ export default function Auth() {
         await logUserLogin();
         
         toast.success('Welcome back!');
-        navigate('/', { replace: true });
+        // Navigation will be handled by the useEffect based on isApproved status
       } else {
         const { data, error } = await signUp(formData.email, formData.password, formData.fullName);
         
@@ -114,8 +118,8 @@ export default function Auth() {
         if (data.user && !data.session) {
           toast.success('Account created! Please check your email to verify.');
         } else {
-          toast.success('Account created successfully!');
-          navigate('/', { replace: true });
+          toast.success('Account created! Waiting for admin approval.');
+          navigate('/pending-approval', { replace: true });
         }
       }
     } catch {
