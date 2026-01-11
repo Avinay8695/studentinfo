@@ -3,19 +3,60 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, LogOut, Mail, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 
 export default function PendingApproval() {
   const navigate = useNavigate();
-  const { user, signOut, refreshApprovalStatus } = useAuth();
+  const { user, isAuthenticated, loading, isApproved, signOut, refreshApprovalStatus } = useAuth();
   const [checking, setChecking] = useState(false);
+  const [autoChecking, setAutoChecking] = useState(false);
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate('/auth', { replace: true });
+    }
+  }, [loading, isAuthenticated, navigate]);
+
+  // Redirect to dashboard if already approved
+  useEffect(() => {
+    if (!loading && isAuthenticated && isApproved === true) {
+      navigate('/', { replace: true });
+    }
+  }, [loading, isAuthenticated, isApproved, navigate]);
+
+  // Auto-check approval status every 5 seconds
+  const autoCheckStatus = useCallback(async () => {
+    if (autoChecking) return;
+    
+    setAutoChecking(true);
+    try {
+      const approved = await refreshApprovalStatus();
+      if (approved) {
+        toast.success('Your account has been approved!');
+        navigate('/', { replace: true });
+      }
+    } catch {
+      // Silent fail for auto-check
+    } finally {
+      setAutoChecking(false);
+    }
+  }, [refreshApprovalStatus, navigate, autoChecking]);
+
+  useEffect(() => {
+    // Only start polling if user is authenticated and not approved
+    if (!loading && isAuthenticated && isApproved === false) {
+      const interval = setInterval(autoCheckStatus, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [loading, isAuthenticated, isApproved, autoCheckStatus]);
 
   const handleCheckStatus = async () => {
     setChecking(true);
     try {
-      const isApproved = await refreshApprovalStatus();
-      if (isApproved) {
+      const approved = await refreshApprovalStatus();
+      if (approved) {
         toast.success('Your account has been approved!');
         navigate('/', { replace: true });
       } else {
@@ -32,6 +73,11 @@ export default function PendingApproval() {
     await signOut();
     navigate('/auth', { replace: true });
   };
+
+  // Don't render anything while loading or if not authenticated
+  if (loading || !isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
@@ -52,6 +98,12 @@ export default function PendingApproval() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Auto-check indicator */}
+          <div className="text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${autoChecking ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`} />
+            Auto-checking every 5 seconds...
+          </div>
+
           {/* User info */}
           <div className="bg-muted/50 rounded-lg p-4 flex items-center gap-3">
             <Mail className="w-5 h-5 text-muted-foreground" />
@@ -73,7 +125,7 @@ export default function PendingApproval() {
               ) : (
                 <RefreshCw className="w-4 h-4 mr-2" />
               )}
-              Check Approval Status
+              Check Now
             </Button>
             
             <Button 
