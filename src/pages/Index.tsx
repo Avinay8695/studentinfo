@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useStudentsQuery } from '@/hooks/useStudentsQuery';
 import { useAuth } from '@/hooks/useAuth';
 import { Header } from '@/components/Header';
@@ -14,7 +13,7 @@ import { DashboardSummary } from '@/components/DashboardSummary';
 import { DateRangeAnalytics } from '@/components/DateRangeAnalytics';
 import { SectionNav, defaultSections } from '@/components/SectionNav';
 import { Student } from '@/types/student';
-import { Loader2, UserPlus, ChevronDown, ChevronUp } from 'lucide-react';
+import { UserPlus, ChevronDown, ChevronUp } from 'lucide-react';
 import { StudentTableSkeleton } from '@/components/skeletons/StudentTableSkeleton';
 import { StatsCardsSkeleton } from '@/components/skeletons/StatsCardsSkeleton';
 import { StudentFormSkeleton } from '@/components/skeletons/StudentFormSkeleton';
@@ -23,8 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const Index = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, loading: authLoading, user, isAdmin, isApproved } = useAuth();
+  const { isAdmin } = useAuth();
   
   const {
     students,
@@ -51,17 +49,6 @@ const Index = () => {
   const [isAnalyticsDialogOpen, setIsAnalyticsDialogOpen] = useState(false);
   const [analyticsStudentId, setAnalyticsStudentId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-
-  // Redirect to auth if not authenticated, or to pending-approval if not approved
-  useEffect(() => {
-    if (!authLoading) {
-      if (!isAuthenticated) {
-        navigate('/auth', { replace: true });
-      } else if (isApproved === false) {
-        navigate('/pending-approval', { replace: true });
-      }
-    }
-  }, [isAuthenticated, authLoading, isApproved, navigate]);
 
   // Open form when editing
   useEffect(() => {
@@ -115,23 +102,6 @@ const Index = () => {
       setIsFormOpen(false);
     }
   };
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
