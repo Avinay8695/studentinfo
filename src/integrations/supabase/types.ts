@@ -103,6 +103,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_approved: boolean
+          is_banned: boolean
           updated_at: string
           user_id: string
         }
@@ -112,6 +113,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_approved?: boolean
+          is_banned?: boolean
           updated_at?: string
           user_id: string
         }
@@ -121,6 +123,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_approved?: boolean
+          is_banned?: boolean
           updated_at?: string
           user_id?: string
         }

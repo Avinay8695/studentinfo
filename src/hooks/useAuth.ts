@@ -10,6 +10,7 @@ interface AuthState {
   role: AppRole | null;
   fullName: string | null;
   isApproved: boolean | null;
+  isBanned: boolean | null;
   loading: boolean;
 }
 
@@ -20,6 +21,7 @@ export function useAuth() {
     role: null,
     fullName: null,
     isApproved: null,
+    isBanned: null,
     loading: true,
   });
 
@@ -39,7 +41,7 @@ export function useAuth() {
             fetchUserData(session.user.id);
           }, 0);
         } else {
-          setState(prev => ({ ...prev, role: null, fullName: null, isApproved: null, loading: false }));
+          setState(prev => ({ ...prev, role: null, fullName: null, isApproved: null, isBanned: null, loading: false }));
         }
       }
     );
@@ -73,7 +75,7 @@ export function useAuth() {
           .maybeSingle(),
         supabase
           .from('profiles')
-          .select('full_name, is_approved')
+          .select('full_name, is_approved, is_banned')
           .eq('user_id', userId)
           .maybeSingle()
       ]);
@@ -88,17 +90,19 @@ export function useAuth() {
       const role = (roleResult.data?.role as AppRole) || 'user';
       // Admins are always considered approved
       const isApproved = role === 'admin' ? true : (profileResult.data?.is_approved ?? false);
+      const isBanned = profileResult.data?.is_banned ?? false;
 
       setState(prev => ({
         ...prev,
         role,
         fullName: profileResult.data?.full_name || null,
         isApproved,
+        isBanned,
         loading: false,
       }));
     } catch (err) {
       console.error('Error fetching user data:', err);
-      setState(prev => ({ ...prev, role: 'user', fullName: null, isApproved: false, loading: false }));
+      setState(prev => ({ ...prev, role: 'user', fullName: null, isApproved: false, isBanned: false, loading: false }));
     }
   };
 
@@ -159,6 +163,7 @@ export function useAuth() {
         role: null,
         fullName: null,
         isApproved: null,
+        isBanned: null,
         loading: false,
       });
       return { error: null };
@@ -170,6 +175,7 @@ export function useAuth() {
         role: null,
         fullName: null,
         isApproved: null,
+        isBanned: null,
         loading: false,
       });
       return { error: null };
@@ -182,6 +188,7 @@ export function useAuth() {
     role: state.role,
     fullName: state.fullName,
     isApproved: state.isApproved,
+    isBanned: state.isBanned,
     loading: state.loading,
     isAuthenticated: !!state.session,
     isAdmin: state.role === 'admin',

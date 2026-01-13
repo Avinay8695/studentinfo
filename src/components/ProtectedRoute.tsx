@@ -10,13 +10,19 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const navigate = useNavigate();
-  const { isAuthenticated, loading, isApproved, isAdmin } = useAuth();
+  const { isAuthenticated, loading, isApproved, isBanned, isAdmin } = useAuth();
 
   useEffect(() => {
     if (!loading) {
       // Not authenticated - redirect to auth
       if (!isAuthenticated) {
         navigate('/auth', { replace: true });
+        return;
+      }
+
+      // Banned users - redirect to banned page
+      if (isBanned === true) {
+        navigate('/banned', { replace: true });
         return;
       }
 
@@ -32,7 +38,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
         return;
       }
     }
-  }, [isAuthenticated, loading, isApproved, isAdmin, requireAdmin, navigate]);
+  }, [isAuthenticated, loading, isApproved, isBanned, isAdmin, requireAdmin, navigate]);
 
   // Show loading while checking auth state
   if (loading) {
@@ -46,8 +52,8 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  // Don't render if not authenticated or not approved
-  if (!isAuthenticated || isApproved === false) {
+  // Don't render if not authenticated, banned, or not approved
+  if (!isAuthenticated || isBanned === true || isApproved === false) {
     return null;
   }
 

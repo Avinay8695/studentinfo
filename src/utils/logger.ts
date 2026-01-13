@@ -112,3 +112,26 @@ export const logUserLogin = () =>
     entityType: 'USER',
     details: { description: 'User logged in' },
   });
+
+export const logUserBan = (userId: string, email: string, isBanned: boolean) =>
+  logActivity({
+    action: 'UPDATE',
+    entityType: 'USER',
+    entityId: userId,
+    details: { 
+      before: { is_banned: !isBanned },
+      after: { is_banned: isBanned },
+      description: isBanned ? `Banned user: ${email}` : `Unbanned user: ${email}` 
+    },
+  });
+
+export const logUserDelete = (userId: string, email: string) =>
+  logActivity({
+    action: 'DELETE',
+    entityType: 'USER',
+    entityId: userId,
+    details: { 
+      before: { email },
+      description: `Deleted user: ${email}` 
+    },
+  });
