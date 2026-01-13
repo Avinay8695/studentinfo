@@ -22,10 +22,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Shield, User, Users, Loader2, CheckCircle, Clock, UserCheck } from 'lucide-react';
+import { ArrowLeft, Shield, User, Users, Loader2, CheckCircle, Clock, UserCheck, Ban, Trash2, ShieldOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
+import { logUserBan, logUserDelete } from '@/utils/logger';
 
 interface UserWithRole {
   id: string;
@@ -34,15 +36,19 @@ interface UserWithRole {
   full_name: string | null;
   role: 'admin' | 'user';
   is_approved: boolean;
+  is_banned: boolean;
   created_at: string;
 }
 
 export default function UserManagement() {
   const navigate = useNavigate();
-  const { isAuthenticated, isAdmin, loading: authLoading } = useAuth();
+  const { isAuthenticated, isAdmin, loading: authLoading, user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserWithRole | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
@@ -65,10 +71,10 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // Fetch profiles with their roles including is_approved
+      // Fetch profiles with their roles including is_approved and is_banned
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, user_id, email, full_name, is_approved, created_at');
+        .select('id, user_id, email, full_name, is_approved, is_banned, created_at');
 
       if (profilesError) throw profilesError;
 
@@ -86,6 +92,7 @@ export default function UserManagement() {
           ...profile,
           role: (userRole?.role as 'admin' | 'user') || 'user',
           is_approved: profile.is_approved ?? false,
+          is_banned: profile.is_banned ?? false,
         };
       });
 
@@ -146,6 +153,88 @@ export default function UserManagement() {
     }
   };
 
+  const handleBanUser = async (userItem: UserWithRole) => {
+    try {
+      setUpdatingUserId(userItem.user_id);
+      const newBannedStatus = !userItem.is_banned;
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_banned: newBannedStatus })
+        .eq('user_id', userItem.user_id);
+
+      if (error) throw error;
+
+      setUsers(prev => 
+        prev.map(u => u.user_id === userItem.user_id ? { ...u, is_banned: newBannedStatus } : u)
+      );
+      
+      // Log the action
+      await logUserBan(userItem.user_id, userItem.email || 'Unknown', newBannedStatus);
+      
+      toast.success(newBannedStatus ? 'User banned successfully!' : 'User unbanned successfully!');
+    } catch (error) {
+      console.error('Error banning/unbanning user:', error);
+      toast.error('Failed to update ban status');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    
+    try {
+      setDeleting(true);
+      
+      // Get session for auth header
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error('Authentication required');
+        return;
+      }
+
+      // Call edge function to delete user
+      const response = await fetch(
+        `https://uqitybcfiwfxeitpeqfb.supabase.co/functions/v1/delete-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ user_id: userToDelete.user_id }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete user');
+      }
+
+      // Log the action
+      await logUserDelete(userToDelete.user_id, userToDelete.email || 'Unknown');
+      
+      // Remove user from local state
+      setUsers(prev => prev.filter(u => u.user_id !== userToDelete.user_id));
+      toast.success('User deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete user');
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+    }
+  };
+
+  const openDeleteDialog = (userItem: UserWithRole) => {
+    setUserToDelete(userItem);
+    setDeleteDialogOpen(true);
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -156,8 +245,9 @@ export default function UserManagement() {
 
   const adminCount = users.filter(u => u.role === 'admin').length;
   const userCount = users.filter(u => u.role === 'user').length;
-  const pendingUsers = users.filter(u => !u.is_approved && u.role !== 'admin');
-  const approvedUsers = users.filter(u => u.is_approved || u.role === 'admin');
+  const pendingUsers = users.filter(u => !u.is_approved && u.role !== 'admin' && !u.is_banned);
+  const approvedUsers = users.filter(u => (u.is_approved || u.role === 'admin') && !u.is_banned);
+  const bannedUsers = users.filter(u => u.is_banned);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -186,7 +276,7 @@ export default function UserManagement() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
           <Card className="border-amber-500/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -207,6 +297,17 @@ export default function UserManagement() {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-green-500">{approvedUsers.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-destructive/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Ban className="w-4 h-4 text-destructive" />
+                Banned
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-destructive">{bannedUsers.length}</p>
             </CardContent>
           </Card>
           <Card className="border-primary/20">
@@ -235,10 +336,10 @@ export default function UserManagement() {
 
         {/* Users Tabs */}
         <Tabs defaultValue={pendingUsers.length > 0 ? "pending" : "approved"} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pending" className="relative">
               <Clock className="w-4 h-4 mr-2" />
-              Pending Approval
+              Pending
               {pendingUsers.length > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
                   {pendingUsers.length}
@@ -247,7 +348,16 @@ export default function UserManagement() {
             </TabsTrigger>
             <TabsTrigger value="approved">
               <CheckCircle className="w-4 h-4 mr-2" />
-              Approved Users
+              Approved
+            </TabsTrigger>
+            <TabsTrigger value="banned" className="relative">
+              <Ban className="w-4 h-4 mr-2" />
+              Banned
+              {bannedUsers.length > 0 && (
+                <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  {bannedUsers.length}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -359,60 +469,179 @@ export default function UserManagement() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {approvedUsers.map((user) => (
-                          <TableRow key={user.id}>
+                        {approvedUsers.map((userItem) => (
+                          <TableRow key={userItem.id}>
                             <TableCell>
                               <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-full ${user.role === 'admin' ? 'bg-primary/10' : 'bg-muted'}`}>
-                                  {user.role === 'admin' ? (
+                                <div className={`p-2 rounded-full ${userItem.role === 'admin' ? 'bg-primary/10' : 'bg-muted'}`}>
+                                  {userItem.role === 'admin' ? (
                                     <Shield className="w-4 h-4 text-primary" />
                                   ) : (
                                     <User className="w-4 h-4 text-muted-foreground" />
                                   )}
                                 </div>
                                 <div>
-                                  <p className="font-medium">{user.full_name || 'Unnamed User'}</p>
-                                  <p className="text-xs text-muted-foreground sm:hidden">{user.email}</p>
+                                  <p className="font-medium">{userItem.full_name || 'Unnamed User'}</p>
+                                  <p className="text-xs text-muted-foreground sm:hidden">{userItem.email}</p>
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell className="hidden sm:table-cell text-muted-foreground">
-                              {user.email}
+                              {userItem.email}
                             </TableCell>
                             <TableCell>
                               <Badge 
-                                variant={user.role === 'admin' ? 'default' : 'secondary'}
-                                className={user.role === 'admin' ? 'bg-primary' : ''}
+                                variant={userItem.role === 'admin' ? 'default' : 'secondary'}
+                                className={userItem.role === 'admin' ? 'bg-primary' : ''}
                               >
-                                {user.role === 'admin' ? 'Admin' : 'User'}
+                                {userItem.role === 'admin' ? 'Admin' : 'User'}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Select
-                                value={user.role}
-                                onValueChange={(value: 'admin' | 'user') => handleRoleChange(user.user_id, value)}
-                                disabled={updatingUserId === user.user_id}
-                              >
-                                <SelectTrigger className="w-[120px]">
-                                  {updatingUserId === user.user_id ? (
+                              <div className="flex items-center justify-end gap-2">
+                                <Select
+                                  value={userItem.role}
+                                  onValueChange={(value: 'admin' | 'user') => handleRoleChange(userItem.user_id, value)}
+                                  disabled={updatingUserId === userItem.user_id || userItem.user_id === currentUser?.id}
+                                >
+                                  <SelectTrigger className="w-[100px]">
+                                    {updatingUserId === userItem.user_id ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <SelectValue />
+                                    )}
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="admin">
+                                      <span className="flex items-center gap-2">
+                                        <Shield className="w-3 h-3" /> Admin
+                                      </span>
+                                    </SelectItem>
+                                    <SelectItem value="user">
+                                      <span className="flex items-center gap-2">
+                                        <User className="w-3 h-3" /> User
+                                      </span>
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                {/* Ban button - don't show for current user or other admins */}
+                                {userItem.user_id !== currentUser?.id && userItem.role !== 'admin' && (
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => handleBanUser(userItem)}
+                                    disabled={updatingUserId === userItem.user_id}
+                                    className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                    title="Ban User"
+                                  >
+                                    <Ban className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                {/* Delete button - don't show for current user */}
+                                {userItem.user_id !== currentUser?.id && (
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => openDeleteDialog(userItem)}
+                                    disabled={updatingUserId === userItem.user_id}
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    title="Delete User"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Banned Users Tab */}
+          <TabsContent value="banned">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Ban className="w-5 h-5 text-destructive" />
+                  Banned Users
+                </CardTitle>
+                <CardDescription>
+                  Users who have been banned from the system
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : bannedUsers.length === 0 ? (
+                  <div className="text-center py-8">
+                    <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                    <p className="text-muted-foreground">No banned users</p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead>User</TableHead>
+                          <TableHead className="hidden sm:table-cell">Email</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {bannedUsers.map((userItem) => (
+                          <TableRow key={userItem.id} className="bg-destructive/5">
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-full bg-destructive/10">
+                                  <Ban className="w-4 h-4 text-destructive" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">{userItem.full_name || 'Unnamed User'}</p>
+                                  <p className="text-xs text-muted-foreground sm:hidden">{userItem.email}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell text-muted-foreground">
+                              {userItem.email}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleBanUser(userItem)}
+                                  disabled={updatingUserId === userItem.user_id}
+                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                >
+                                  {updatingUserId === userItem.user_id ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                   ) : (
-                                    <SelectValue />
+                                    <>
+                                      <ShieldOff className="w-4 h-4 mr-1" />
+                                      Unban
+                                    </>
                                   )}
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="admin">
-                                    <span className="flex items-center gap-2">
-                                      <Shield className="w-3 h-3" /> Admin
-                                    </span>
-                                  </SelectItem>
-                                  <SelectItem value="user">
-                                    <span className="flex items-center gap-2">
-                                      <User className="w-3 h-3" /> User
-                                    </span>
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  onClick={() => openDeleteDialog(userItem)}
+                                  disabled={updatingUserId === userItem.user_id}
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  title="Delete User"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -425,6 +654,17 @@ export default function UserManagement() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setUserToDelete(null);
+        }}
+        onConfirm={handleDeleteUser}
+        studentName={userToDelete?.full_name || userToDelete?.email || 'this user'}
+      />
       
       <Footer />
     </div>
