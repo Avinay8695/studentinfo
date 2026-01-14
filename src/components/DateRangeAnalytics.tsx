@@ -444,7 +444,10 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
                       width={60}
                     />
                     <Tooltip 
-                      formatter={(value: number, name: string) => [formatFullCurrency(value), name === 'collected' ? 'Collected' : 'Pending']}
+                      formatter={(value: number, name: string) => {
+                        const label = name === 'collected' ? 'Collected' : name === 'pending' ? 'Pending' : name;
+                        return [formatFullCurrency(value), label];
+                      }}
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))', 
                         border: '1px solid hsl(var(--border))',
@@ -452,6 +455,7 @@ export function DateRangeAnalytics({ students }: DateRangeAnalyticsProps) {
                         boxShadow: '0 10px 40px -10px rgba(0,0,0,0.2)'
                       }}
                       labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      itemStyle={{ color: 'hsl(var(--foreground))' }}
                     />
                     <Bar dataKey="collected" fill="#10b981" radius={[6, 6, 0, 0]} name="Collected" />
                     <Bar dataKey="pending" fill="#ef4444" radius={[6, 6, 0, 0]} name="Pending" />
