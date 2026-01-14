@@ -22,12 +22,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Shield, User, Users, Loader2, CheckCircle, Clock, UserCheck, Ban, Trash2, ShieldOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { logUserBan, logUserDelete } from '@/utils/logger';
+import { UserManagementSkeleton } from '@/components/skeletons/UserManagementSkeleton';
 
 interface UserWithRole {
   id: string;
@@ -235,10 +236,14 @@ export default function UserManagement() {
     setDeleteDialogOpen(true);
   };
 
-  if (authLoading) {
+  if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 sm:py-8">
+          <UserManagementSkeleton />
+        </main>
+        <Footer />
       </div>
     );
   }

@@ -21,7 +21,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { AuditLogsSkeleton } from '@/components/skeletons/AuditLogsSkeleton';
 import {
   Sheet,
   SheetContent,
@@ -222,10 +222,14 @@ export default function AuditLogs() {
 
   const groupedLogs = groupLogsByDate(logs);
 
-  if (authLoading) {
+  if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/30">
+        <Header />
+        <main className="flex-1 container max-w-5xl mx-auto px-4 py-6 sm:py-8">
+          <AuditLogsSkeleton />
+        </main>
+        <Footer />
       </div>
     );
   }
@@ -312,19 +316,7 @@ export default function AuditLogs() {
         </div>
 
         {/* Timeline */}
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex gap-4">
-                <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : logs.length === 0 ? (
+        {logs.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
               <Calendar className="w-8 h-8 text-muted-foreground" />
