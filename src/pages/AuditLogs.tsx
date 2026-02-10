@@ -36,6 +36,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { BottomSheet } from '@/components/ui/responsive-modal';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -193,9 +195,11 @@ function groupLogsByDate(logs: AuditLog[]): Record<string, AuditLog[]> {
 export default function AuditLogs() {
   const navigate = useNavigate();
   const { isAdmin, loading: authLoading } = useAuth();
+  const isMobile = useIsMobile();
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [actionFilter, setActionFilter] = useState<string>('all');
   const [entityFilter, setEntityFilter] = useState<string>('all');
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['audit-logs', actionFilter, entityFilter],
@@ -279,41 +283,114 @@ export default function AuditLogs() {
           </div>
         </div>
 
-        {/* Filter Bar */}
-        <div className="mb-6 p-4 rounded-2xl bg-card/50 backdrop-blur-xl border border-border/50 shadow-lg">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Filter className="w-4 h-4" />
-              <span className="font-medium">Filters:</span>
+        {/* Filter Bar - Desktop inline, Mobile bottom sheet */}
+        {isMobile ? (
+          <>
+            <div className="mb-6 flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setFilterSheetOpen(true)}
+                className="gap-2"
+              >
+                <Filter className="w-4 h-4" />
+                Filters
+                {(actionFilter !== 'all' || entityFilter !== 'all') && (
+                  <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
+                    {(actionFilter !== 'all' ? 1 : 0) + (entityFilter !== 'all' ? 1 : 0)}
+                  </Badge>
+                )}
+              </Button>
+              {(actionFilter !== 'all' || entityFilter !== 'all') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setActionFilter('all'); setEntityFilter('all'); }}
+                  className="text-muted-foreground"
+                >
+                  Clear
+                </Button>
+              )}
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Select value={actionFilter} onValueChange={setActionFilter}>
-                <SelectTrigger className="w-[140px] h-10 bg-background/50">
-                  <SelectValue placeholder="Action Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Actions</SelectItem>
-                  <SelectItem value="CREATE">Create</SelectItem>
-                  <SelectItem value="UPDATE">Update</SelectItem>
-                  <SelectItem value="DELETE">Delete</SelectItem>
-                  <SelectItem value="LOGIN">Login</SelectItem>
-                </SelectContent>
-              </Select>
+            <BottomSheet
+              open={filterSheetOpen}
+              onOpenChange={setFilterSheetOpen}
+              title="Filter Activities"
+              description="Filter audit logs by action and entity type"
+              footer={
+                <Button className="w-full" onClick={() => setFilterSheetOpen(false)}>
+                  Apply Filters
+                </Button>
+              }
+            >
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Action Type</label>
+                  <Select value={actionFilter} onValueChange={setActionFilter}>
+                    <SelectTrigger className="w-full h-12 bg-background/50">
+                      <SelectValue placeholder="Action Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Actions</SelectItem>
+                      <SelectItem value="CREATE">Create</SelectItem>
+                      <SelectItem value="UPDATE">Update</SelectItem>
+                      <SelectItem value="DELETE">Delete</SelectItem>
+                      <SelectItem value="LOGIN">Login</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Entity Type</label>
+                  <Select value={entityFilter} onValueChange={setEntityFilter}>
+                    <SelectTrigger className="w-full h-12 bg-background/50">
+                      <SelectValue placeholder="Entity Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Entities</SelectItem>
+                      <SelectItem value="STUDENT">Student</SelectItem>
+                      <SelectItem value="PAYMENT">Payment</SelectItem>
+                      <SelectItem value="USER">User</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </BottomSheet>
+          </>
+        ) : (
+          <div className="mb-6 p-4 rounded-2xl bg-card/50 backdrop-blur-xl border border-border/50 shadow-lg">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Filter className="w-4 h-4" />
+                <span className="font-medium">Filters:</span>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Select value={actionFilter} onValueChange={setActionFilter}>
+                  <SelectTrigger className="w-[140px] h-10 bg-background/50">
+                    <SelectValue placeholder="Action Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Actions</SelectItem>
+                    <SelectItem value="CREATE">Create</SelectItem>
+                    <SelectItem value="UPDATE">Update</SelectItem>
+                    <SelectItem value="DELETE">Delete</SelectItem>
+                    <SelectItem value="LOGIN">Login</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={entityFilter} onValueChange={setEntityFilter}>
-                <SelectTrigger className="w-[140px] h-10 bg-background/50">
-                  <SelectValue placeholder="Entity Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Entities</SelectItem>
-                  <SelectItem value="STUDENT">Student</SelectItem>
-                  <SelectItem value="PAYMENT">Payment</SelectItem>
-                  <SelectItem value="USER">User</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={entityFilter} onValueChange={setEntityFilter}>
+                  <SelectTrigger className="w-[140px] h-10 bg-background/50">
+                    <SelectValue placeholder="Entity Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Entities</SelectItem>
+                    <SelectItem value="STUDENT">Student</SelectItem>
+                    <SelectItem value="PAYMENT">Payment</SelectItem>
+                    <SelectItem value="USER">User</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Timeline */}
         {logs.length === 0 ? (

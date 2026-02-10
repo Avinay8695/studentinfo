@@ -1,5 +1,5 @@
 import { Student, MonthlyPayment } from '@/types/student';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ResponsiveModal } from '@/components/ui/responsive-modal';
 import { Button } from '@/components/ui/button';
 import { Check, X, Calendar, IndianRupee, User, GraduationCap, Clock, Lock, Receipt } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -53,19 +53,13 @@ export function MonthlyPaymentTracker({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-xl font-display">
-            <div className="p-2 bg-primary/10 rounded-xl">
-              <Calendar className="w-5 h-5 text-primary" />
-            </div>
-            Monthly Payment Tracker
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            Track and manage monthly payments for {student.fullName}
-          </DialogDescription>
-        </DialogHeader>
+    <ResponsiveModal 
+      open={isOpen} 
+      onOpenChange={onClose}
+      title="Monthly Payment Tracker"
+      description={`Track and manage monthly payments for ${student.fullName}`}
+      className="max-w-2xl max-h-[90vh] overflow-y-auto"
+    >
         
         {/* Student Info Card */}
         <div className="p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl border border-border/50 mb-4">
@@ -237,7 +231,6 @@ export function MonthlyPaymentTracker({
             </div>
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+    </ResponsiveModal>
   );
 }
