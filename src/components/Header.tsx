@@ -37,8 +37,9 @@ export function Header() {
   };
 
   return (
+    <>
     <header className="fixed top-0 left-0 right-0 z-50">
-      <div className="relative overflow-hidden transition-all duration-500" style={{ padding: scrolled ? '0' : '0' }}>
+      <div className="relative overflow-hidden transition-all duration-500">
         {/* Animated gradient background */}
         <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%]" style={{ animation: 'gradient-shift 8s ease infinite' }} />
         
@@ -194,5 +195,8 @@ export function Header() {
         </div>
       </div>
     </header>
+    {/* Spacer for fixed header - adjusts with scroll state */}
+    <div className="h-[60px] sm:h-[76px] lg:h-[92px]" />
+    </>
   );
 }
