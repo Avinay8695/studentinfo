@@ -115,8 +115,6 @@ const Index = () => {
       <div className="fixed inset-0 bg-gradient-to-b from-transparent via-transparent to-background/50 dark:to-background/80 pointer-events-none" />
       
       <Header />
-      {/* Spacer for fixed header */}
-      <div className="h-[56px] sm:h-[72px] lg:h-[88px]" />
 
       {/* Section Navigation */}
       <SectionNav sections={defaultSections} />
