@@ -43,17 +43,8 @@ export function Header() {
         {/* Animated gradient background */}
         <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%]" style={{ animation: 'gradient-shift 8s ease infinite' }} />
         
-        {/* Decorative elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-8 -right-8 w-32 h-32 sm:w-48 sm:h-48 bg-white/10 rounded-full blur-2xl animate-pulse-slow" />
-          <div className="absolute -bottom-12 -left-12 w-40 h-40 sm:w-56 sm:h-56 bg-white/8 rounded-full blur-2xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-32 bg-white/5 rounded-full blur-3xl" />
-          <div className="absolute inset-0 opacity-[0.07]" style={{ 
-            backgroundImage: 'linear-gradient(90deg, white 1px, transparent 1px), linear-gradient(white 1px, transparent 1px)',
-            backgroundSize: '40px 40px'
-          }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-white/5" />
-        </div>
+        {/* Lightweight decorative overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-white/5" />
 
         {/* Content */}
         <div className="relative z-10 px-3 sm:px-6">
@@ -72,7 +63,7 @@ export function Header() {
                     <div className="w-full h-full rounded-[10px] sm:rounded-[14px] bg-black/10 backdrop-blur-sm" />
                   </div>
                   <div className={`relative overflow-hidden shadow-2xl transition-all duration-500 rounded-xl sm:rounded-2xl group-hover:scale-105 ${scrolled ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14'}`}>
-                    <img src={logoImage} alt="Success Desirous Logo" className="w-full h-full object-cover" />
+                    <img src={logoImage} alt="Success Desirous Logo" className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
                   </div>
                 </button>
                 
