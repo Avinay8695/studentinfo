@@ -1,94 +1,53 @@
-import { Database, Shield, Sparkles, Cloud, Heart, GraduationCap } from 'lucide-react';
-import logoImage from '@/assets/logo-success-desirous.jpg';
+import { Code2, Phone, Mail } from 'lucide-react';
+import developerImage from '@/assets/developer-avinay.jpg';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
-  
-  return (
-    <footer className="relative overflow-hidden mt-auto">
-      {/* Matching header gradient band */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%]" style={{ animation: 'gradient-shift 8s ease infinite' }} />
-        
-        {/* Decorative elements matching header */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse-slow" />
-          <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/8 rounded-full blur-2xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
-          <div className="absolute inset-0 opacity-[0.07]" style={{ 
-            backgroundImage: 'linear-gradient(90deg, white 1px, transparent 1px), linear-gradient(white 1px, transparent 1px)',
-            backgroundSize: '40px 40px'
-          }} />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-white/5" />
-        </div>
 
-        <div className="relative z-10 px-3 sm:px-6">
-          <div className="container max-w-7xl mx-auto py-6 sm:py-8">
-            <div className="flex flex-col gap-5">
-              
-              {/* Branding row */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-shrink-0">
-                    <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-br from-white/40 to-white/10 p-[1.5px]">
-                      <div className="w-full h-full rounded-[10px] bg-black/10 backdrop-blur-sm" />
-                    </div>
-                    <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-2xl">
-                      <img src={logoImage} alt="Success Desirous Logo" className="w-full h-full object-cover" />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm sm:text-base font-extrabold tracking-tight font-display text-white drop-shadow-md">
-                        Success Desirous
-                      </span>
-                      <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse drop-shadow-lg" />
-                    </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <GraduationCap className="w-3 h-3 text-white/60" />
-                      <p className="text-white/70 text-[10px] font-medium tracking-widest uppercase">
-                        Student Management
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Feature pills */}
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  {[
-                    { icon: Cloud, label: 'Cloud Sync' },
-                    { icon: Shield, label: 'Secure' },
-                    { icon: Sparkles, label: 'Real-time' },
-                    { icon: Database, label: 'Supabase' },
-                  ].map((feature) => (
-                    <div 
-                      key={feature.label}
-                      className="group flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/15 hover:bg-white/20 transition-all duration-300 cursor-default hover:scale-105"
-                    >
-                      <feature.icon className="w-3 h-3 text-white/80 transition-transform duration-300 group-hover:scale-110" />
-                      <span className="text-xs font-medium text-white/90">{feature.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Divider */}
-              <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              
-              {/* Bottom row */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-white/70">
-                  <span>Made with</span>
-                  <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400 animate-pulse" />
-                  <span>for educators</span>
-                  <span className="mx-1 hidden sm:inline text-white/30">•</span>
-                  <span className="font-semibold text-white">© {currentYear}</span>
-                </div>
-                
-                <span className="text-[10px] text-white/60 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/15 font-medium">
-                  v2.0.0 <span className="text-yellow-300 ml-1">Premium</span>
-                </span>
-              </div>
+  return (
+    <footer className="mt-auto border-t border-border bg-card/80 backdrop-blur-sm">
+      <div className="container max-w-7xl mx-auto px-4 py-6 sm:py-8">
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+          {/* Developer photo */}
+          <img
+            src={developerImage}
+            alt="Avinay Gupta"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary/20 shadow-md flex-shrink-0"
+          />
+
+          {/* Info */}
+          <div className="text-center sm:text-left space-y-1.5">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <Code2 className="w-4 h-4 text-primary" />
+              <h3 className="text-sm sm:text-base font-semibold text-foreground font-display">
+                Built by Avinay Gupta
+              </h3>
             </div>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Full-Stack Developer &amp; Software Engineering Student
+            </p>
+            <div className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-4 text-xs text-muted-foreground">
+              <a
+                href="tel:8695721922"
+                className="inline-flex items-center gap-1.5 hover:text-primary transition-colors"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>8695721922</span>
+              </a>
+              <span className="hidden sm:inline text-border">|</span>
+              <a
+                href="mailto:avinay.gupta@zohomail.in"
+                className="inline-flex items-center gap-1.5 hover:text-primary transition-colors"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>avinay.gupta@zohomail.in</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Copyright pushed right on desktop */}
+          <div className="sm:ml-auto text-xs text-muted-foreground text-center">
+            © {currentYear} Success Desirous
           </div>
         </div>
       </div>
