@@ -230,6 +230,7 @@ export default function Auth() {
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       placeholder="Enter your password"
+                      autoComplete="current-password"
                       className={`pl-10 pr-10 min-h-[48px] bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-primary focus:ring-2 focus:ring-primary/30 focus:bg-white/10 transition-all rounded-xl ${errors.password ? 'border-destructive' : ''}`}
                     />
                     <button
@@ -314,6 +315,7 @@ export default function Auth() {
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       placeholder="Min. 6 characters"
+                      autoComplete="new-password"
                       className={`pl-10 pr-10 min-h-[48px] bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-primary focus:ring-2 focus:ring-primary/30 focus:bg-white/10 transition-all rounded-xl ${errors.password ? 'border-destructive' : ''}`}
                     />
                     <button
