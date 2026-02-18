@@ -12,6 +12,7 @@ import { ExportButton } from '@/components/ExportButton';
 import { DashboardSummary } from '@/components/DashboardSummary';
 import { DateRangeAnalytics } from '@/components/DateRangeAnalytics';
 import { SectionNav, defaultSections } from '@/components/SectionNav';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Student } from '@/types/student';
 import { UserPlus, ChevronDown, ChevronUp } from 'lucide-react';
 import { StudentTableSkeleton } from '@/components/skeletons/StudentTableSkeleton';
@@ -116,7 +117,7 @@ const Index = () => {
       {/* Section Navigation */}
       <SectionNav sections={defaultSections} />
       
-      <main className="flex-1 container max-w-7xl mx-auto px-4 py-10 relative z-10">
+      <main className="flex-1 container max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-10 pb-20 md:pb-10 relative z-10">
         {/* Dashboard Summary - always reserve space to prevent CLS */}
         <div id="dashboard-summary" className="min-h-[50px]">
           {!studentsLoading && stats.total > 0 && (
@@ -218,7 +219,10 @@ const Index = () => {
         onClose={handleCloseAnalyticsDialog}
       />
 
-      {/* Scroll to Top Button */}
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
+
+      {/* Scroll to Top Button - hidden on mobile (bottom nav covers it) */}
       <ScrollToTop />
     </div>
   );
