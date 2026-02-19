@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStudentsQuery } from '@/hooks/useStudentsQuery';
 import { useAuth } from '@/hooks/useAuth';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { Header } from '@/components/Header';
 import { StudentFormNew } from '@/components/StudentFormNew';
 import { StatsCards } from '@/components/StatsCards';
@@ -43,7 +45,16 @@ const Index = () => {
     cancelEditing,
     isAdding,
     isUpdating,
+    refetch,
   } = useStudentsQuery();
+
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
+  const { containerRef, pullDistance, isRefreshing, isPastThreshold } = usePullToRefresh({
+    onRefresh: handleRefresh,
+  });
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -105,7 +116,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background relative overflow-x-hidden">
+    <div ref={containerRef} className="min-h-screen flex flex-col bg-background relative overflow-x-hidden">
       {/* Lightweight background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 pattern-dots" />
@@ -113,6 +124,9 @@ const Index = () => {
       </div>
       
       <Header />
+
+      {/* Pull to Refresh Indicator */}
+      <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={isRefreshing} isPastThreshold={isPastThreshold} />
 
       {/* Section Navigation */}
       <SectionNav sections={defaultSections} />

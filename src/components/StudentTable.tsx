@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap, Calendar, CreditCard, BarChart3, Phone } from 'lucide-react';
+import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap, CreditCard, BarChart3, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
+import { SwipeableStudentCard } from './SwipeableStudentCard';
 
 interface StudentTableProps {
   students: Student[];
@@ -104,117 +105,29 @@ export function StudentTable({
       {/* Content */}
       {students.length > 0 ? (
         <>
-          {/* Mobile Card View */}
+          {/* Mobile Card View with Swipe Gestures */}
           <div className="md:hidden divide-y divide-border">
-            {students.map((student, index) => {
-              const payments = student.monthlyPayments || [];
-              const paidCount = payments.filter(p => p.isPaid).length;
-              const totalMonths = payments.length;
-              const progressPercent = totalMonths > 0 ? (paidCount / totalMonths) * 100 : 0;
-
-              return (
-                <div key={student.id} className="p-4 hover:bg-primary/5 transition-colors active:bg-primary/10">
-                  {/* Top row: Avatar + Name + Course */}
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
-                        {student.fullName.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-card-foreground text-sm truncate">{student.fullName}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <GraduationCap className="w-3 h-3 text-primary flex-shrink-0" />
-                          <span className="text-xs text-muted-foreground truncate">{student.course}</span>
-                          {student.batch && (
-                            <>
-                              <span className="text-muted-foreground/40">•</span>
-                              <span className="text-xs text-muted-foreground">{student.batch}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full flex-shrink-0">
-                      #{String(index + 1).padStart(2, '0')}
-                    </span>
-                  </div>
-
-                  {/* Middle row: Fees + Progress */}
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Total Fees</p>
-                      <p className="text-sm font-bold text-card-foreground">{formatCurrency(student.feesAmount)}</p>
-                    </div>
-                    {totalMonths > 0 && (
-                      <div className="flex-1 max-w-[160px]">
-                        <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="text-muted-foreground">{paidCount}/{totalMonths}</span>
-                          <span className={`font-bold ${progressPercent === 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                            {Math.round(progressPercent)}%
-                          </span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full transition-all ${progressPercent === 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-primary to-accent'}`}
-                            style={{ width: `${progressPercent}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Mobile number */}
-                  {student.mobile && (
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <Phone className="w-3 h-3 text-muted-foreground" />
-                      <a href={`tel:${student.mobile}`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
-                        {student.mobile}
-                      </a>
-                    </div>
-                  )}
-
-                  {/* Action buttons */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onViewAnalytics(student)}
-                      className="flex-1 min-h-[40px] text-xs gap-1.5 rounded-xl"
-                    >
-                      <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
-                      Analytics
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onViewPayments(student)}
-                      className="flex-1 min-h-[40px] text-xs gap-1.5 rounded-xl"
-                    >
-                      <CreditCard className="w-3.5 h-3.5 text-violet-600" />
-                      Payments
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEdit(student)}
-                      className="min-h-[40px] min-w-[40px] rounded-xl px-2"
-                    >
-                      <Pencil className="w-3.5 h-3.5 text-primary" />
-                    </Button>
-                    {isAdmin && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteClick(student)}
-                        className="min-h-[40px] min-w-[40px] rounded-xl px-2 border-destructive/30 hover:bg-destructive/10"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            {students.map((student, index) => (
+              <SwipeableStudentCard
+                key={student.id}
+                student={student}
+                index={index}
+                onEdit={onEdit}
+                onDelete={handleDeleteClick}
+                onViewPayments={onViewPayments}
+                onViewAnalytics={onViewAnalytics}
+                isAdmin={isAdmin}
+                formatCurrency={formatCurrency}
+              />
+            ))}
+            {/* Swipe hint */}
+            {students.length > 0 && (
+              <div className="md:hidden px-4 py-2 bg-muted/30">
+                <p className="text-[10px] text-muted-foreground text-center">
+                  ← Swipe left on a card for quick actions
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Desktop Table View */}
