@@ -13,6 +13,7 @@ import { StudentAnalytics } from '@/components/StudentAnalytics';
 import { ExportButton } from '@/components/ExportButton';
 import { DashboardSummary } from '@/components/DashboardSummary';
 import { DateRangeAnalytics } from '@/components/DateRangeAnalytics';
+import { PendingPaymentsReminder } from '@/components/PendingPaymentsReminder';
 import { SectionNav, defaultSections } from '@/components/SectionNav';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Student } from '@/types/student';
@@ -185,6 +186,16 @@ const Index = () => {
               )}
             </CollapsibleContent>
           </Collapsible>
+        </div>
+
+        {/* Pending Payments Reminder */}
+        <div className="mb-8">
+          {!studentsLoading && allStudents.length > 0 && (
+            <PendingPaymentsReminder
+              students={allStudents}
+              onViewPayments={handleViewPayments}
+            />
+          )}
         </div>
 
         {/* Student Table */}
