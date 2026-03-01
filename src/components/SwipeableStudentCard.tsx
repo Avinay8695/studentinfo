@@ -2,6 +2,7 @@ import { useRef, useState, useCallback } from 'react';
 import { Student } from '@/types/student';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, GraduationCap, BarChart3, CreditCard, Phone } from 'lucide-react';
+import { hapticLight, hapticMedium, hapticHeavy } from '@/utils/haptics';
 
 interface SwipeableStudentCardProps {
   student: Student;
@@ -64,10 +65,9 @@ export function SwipeableStudentCard({
     isHorizontal.current = null;
 
     if (swipeX < -SWIPE_THRESHOLD) {
-      // Snap open
       setSwipeX(-MAX_SWIPE);
+      hapticMedium();
     } else {
-      // Snap closed
       setSwipeX(0);
     }
   }, [swipeX, MAX_SWIPE]);
@@ -86,7 +86,7 @@ export function SwipeableStudentCard({
       {/* Background actions (revealed on swipe) */}
       <div className="absolute inset-y-0 right-0 flex items-stretch z-0">
         <button
-          onClick={() => { onEdit(student); closeSwipe(); }}
+          onClick={() => { hapticLight(); onEdit(student); closeSwipe(); }}
           className="flex items-center justify-center w-[70px] bg-primary text-primary-foreground active:opacity-80 transition-opacity"
           aria-label="Edit"
         >
@@ -97,7 +97,7 @@ export function SwipeableStudentCard({
         </button>
         {isAdmin && (
           <button
-            onClick={() => { onDelete(student); closeSwipe(); }}
+            onClick={() => { hapticHeavy(); onDelete(student); closeSwipe(); }}
             className="flex items-center justify-center w-[70px] bg-destructive text-destructive-foreground active:opacity-80 transition-opacity"
             aria-label="Delete"
           >
@@ -181,7 +181,7 @@ export function SwipeableStudentCard({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onViewAnalytics(student)}
+            onClick={() => { hapticLight(); onViewAnalytics(student); }}
             className="flex-1 min-h-[40px] text-xs gap-1.5 rounded-xl"
           >
             <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
@@ -190,7 +190,7 @@ export function SwipeableStudentCard({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onViewPayments(student)}
+            onClick={() => { hapticLight(); onViewPayments(student); }}
             className="flex-1 min-h-[40px] text-xs gap-1.5 rounded-xl"
           >
             <CreditCard className="w-3.5 h-3.5 text-violet-600" />
