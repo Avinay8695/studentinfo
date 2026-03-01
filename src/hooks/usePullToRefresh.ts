@@ -1,4 +1,5 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
+import { hapticMedium, hapticSuccess } from '@/utils/haptics';
 
 interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>;
@@ -44,9 +45,11 @@ export function usePullToRefresh({ onRefresh, threshold = 80, maxPull = 140 }: U
     if (pullDistance >= threshold && !isRefreshing) {
       setIsRefreshing(true);
       setPullDistance(threshold * 0.6);
+      hapticMedium();
       
       try {
         await onRefresh();
+        hapticSuccess();
       } finally {
         setIsRefreshing(false);
         setPullDistance(0);
