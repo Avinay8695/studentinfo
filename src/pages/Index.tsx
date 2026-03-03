@@ -13,7 +13,7 @@ import { StudentAnalytics } from '@/components/StudentAnalytics';
 import { ExportButton } from '@/components/ExportButton';
 import { DashboardSummary } from '@/components/DashboardSummary';
 import { DateRangeAnalytics } from '@/components/DateRangeAnalytics';
-import { PendingPaymentsReminder } from '@/components/PendingPaymentsReminder';
+
 import { SectionNav, defaultSections } from '@/components/SectionNav';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Student } from '@/types/student';
@@ -124,7 +124,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/50 dark:to-background/80" />
       </div>
       
-      <Header />
+      <Header students={allStudents} onViewPayments={handleViewPayments} />
 
       {/* Pull to Refresh Indicator */}
       <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={isRefreshing} isPastThreshold={isPastThreshold} />
@@ -188,15 +188,6 @@ const Index = () => {
           </Collapsible>
         </div>
 
-        {/* Pending Payments Reminder */}
-        <div className="mb-8">
-          {!studentsLoading && allStudents.length > 0 && (
-            <PendingPaymentsReminder
-              students={allStudents}
-              onViewPayments={handleViewPayments}
-            />
-          )}
-        </div>
 
         {/* Student Table */}
         <div id="students">

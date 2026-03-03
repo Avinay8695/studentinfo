@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap, CreditCard, BarChart3, Phone } from 'lucide-react';
+import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap, CreditCard, BarChart3, Phone, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { SwipeableStudentCard } from './SwipeableStudentCard';
@@ -152,6 +153,10 @@ export function StudentTable({
                   const totalMonths = payments.length;
                   const progressPercent = totalMonths > 0 ? (paidCount / totalMonths) * 100 : 0;
                   
+                  const now = new Date();
+                  const overduePayments = payments.filter(p => !p.isPaid && (p.year < now.getFullYear() || (p.year === now.getFullYear() && p.month < now.getMonth())));
+                  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                  
                   return (
                     <TableRow 
                       key={student.id} 
@@ -165,7 +170,29 @@ export function StudentTable({
                           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-sm shadow-md">
                             {student.fullName.charAt(0).toUpperCase()}
                           </div>
-                          <span className="font-semibold text-card-foreground">{student.fullName}</span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-card-foreground">{student.fullName}</span>
+                              {overduePayments.length > 0 && (
+                                <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4 gap-0.5">
+                                  <AlertTriangle className="w-2.5 h-2.5" />
+                                  Overdue
+                                </Badge>
+                              )}
+                            </div>
+                            {overduePayments.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {overduePayments.slice(0, 4).map((p, i) => (
+                                  <span key={i} className="text-[9px] px-1.5 py-0.5 rounded-full font-medium bg-rose-500/12 text-rose-500 border border-rose-500/15">
+                                    {MONTH_NAMES[p.month]}
+                                  </span>
+                                ))}
+                                {overduePayments.length > 4 && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">+{overduePayments.length - 4}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Sparkles, LogOut, User, Shield, Users, History, GraduationCap } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
+import { Student } from '@/types/student';
 import logoImage from '@/assets/logo-success-desirous.jpg';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,7 +17,12 @@ import {
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
-export function Header() {
+interface HeaderProps {
+  students?: Student[];
+  onViewPayments?: (student: Student) => void;
+}
+
+export function Header({ students = [], onViewPayments }: HeaderProps) {
   const { user, fullName, isAdmin, role, signOut } = useAuth();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -114,6 +121,10 @@ export function Header() {
                     </div>
                   </div>
                 </div>
+                
+                {onViewPayments && students.length > 0 && (
+                  <NotificationBell students={students} onViewPayments={onViewPayments} />
+                )}
                 
                 <ThemeToggle />
                 

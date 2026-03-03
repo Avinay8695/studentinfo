@@ -1,8 +1,11 @@
 import { useRef, useState, useCallback } from 'react';
 import { Student } from '@/types/student';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, GraduationCap, BarChart3, CreditCard, Phone } from 'lucide-react';
+import { Pencil, Trash2, GraduationCap, BarChart3, CreditCard, Phone, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { hapticLight, hapticMedium, hapticHeavy } from '@/utils/haptics';
+
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 interface SwipeableStudentCardProps {
   student: Student;
@@ -81,6 +84,9 @@ export function SwipeableStudentCard({
   const totalMonths = payments.length;
   const progressPercent = totalMonths > 0 ? (paidCount / totalMonths) * 100 : 0;
 
+  const now = new Date();
+  const overduePayments = payments.filter(p => !p.isPaid && (p.year < now.getFullYear() || (p.year === now.getFullYear() && p.month < now.getMonth())));
+
   return (
     <div className="relative overflow-hidden" ref={cardRef}>
       {/* Background actions (revealed on swipe) */}
@@ -124,7 +130,15 @@ export function SwipeableStudentCard({
               {student.fullName.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="font-semibold text-card-foreground text-sm truncate">{student.fullName}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-card-foreground text-sm truncate">{student.fullName}</p>
+                {overduePayments.length > 0 && (
+                  <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4 gap-0.5 flex-shrink-0">
+                    <AlertTriangle className="w-2.5 h-2.5" />
+                    {overduePayments.length}mo
+                  </Badge>
+                )}
+              </div>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <GraduationCap className="w-3 h-3 text-primary flex-shrink-0" />
                 <span className="text-xs text-muted-foreground truncate">{student.course}</span>
@@ -135,6 +149,19 @@ export function SwipeableStudentCard({
                   </>
                 )}
               </div>
+              {/* Overdue month pills on mobile */}
+              {overduePayments.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {overduePayments.slice(0, 4).map((p, i) => (
+                    <span key={i} className="text-[9px] px-1.5 py-0.5 rounded-full font-medium bg-rose-500/12 text-rose-500 border border-rose-500/15">
+                      {MONTH_NAMES[p.month]} {p.year.toString().slice(2)}
+                    </span>
+                  ))}
+                  {overduePayments.length > 4 && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">+{overduePayments.length - 4}</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full flex-shrink-0">
