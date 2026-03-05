@@ -380,28 +380,30 @@ export default function UserManagement() {
             { label: 'Users', value: userCount, icon: User, color: 'muted' },
           ].map(({ label, value, icon: Icon, color }) => (
             <Card key={label} className={`min-w-[120px] sm:min-w-0 flex-shrink-0 sm:flex-shrink border-${color === 'primary' ? 'primary' : color === 'red' ? 'destructive' : color === 'muted' ? 'border' : color + '-500'}/20`}>
-              <CardContent className="p-3 sm:p-4 flex items-center gap-3 sm:block">
-                <div className={`p-2 rounded-lg w-fit ${
-                  color === 'amber' ? 'bg-amber-500/10' :
-                  color === 'green' ? 'bg-green-500/10' :
-                  color === 'red' ? 'bg-destructive/10' :
-                  color === 'primary' ? 'bg-primary/10' : 'bg-muted'
-                }`}>
-                  <Icon className={`w-4 h-4 ${
-                    color === 'amber' ? 'text-amber-500' :
-                    color === 'green' ? 'text-green-500' :
-                    color === 'red' ? 'text-destructive' :
-                    color === 'primary' ? 'text-primary' : 'text-muted-foreground'
-                  }`} />
-                </div>
-                <div>
-                  <p className={`text-2xl sm:text-3xl font-bold sm:mt-2 ${
-                    color === 'amber' ? 'text-amber-500' :
-                    color === 'green' ? 'text-green-500' :
-                    color === 'red' ? 'text-destructive' :
-                    color === 'primary' ? 'text-primary' : 'text-card-foreground'
-                  }`}>{value}</p>
-                  <p className="text-xs text-muted-foreground">{label}</p>
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2.5">
+                  <div className={`p-2 rounded-lg flex-shrink-0 ${
+                    color === 'amber' ? 'bg-amber-500/10' :
+                    color === 'green' ? 'bg-green-500/10' :
+                    color === 'red' ? 'bg-destructive/10' :
+                    color === 'primary' ? 'bg-primary/10' : 'bg-muted'
+                  }`}>
+                    <Icon className={`w-4 h-4 ${
+                      color === 'amber' ? 'text-amber-500' :
+                      color === 'green' ? 'text-green-500' :
+                      color === 'red' ? 'text-destructive' :
+                      color === 'primary' ? 'text-primary' : 'text-muted-foreground'
+                    }`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className={`text-xl sm:text-2xl font-bold leading-tight ${
+                      color === 'amber' ? 'text-amber-500' :
+                      color === 'green' ? 'text-green-500' :
+                      color === 'red' ? 'text-destructive' :
+                      color === 'primary' ? 'text-primary' : 'text-card-foreground'
+                    }`}>{value}</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight">{label}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
