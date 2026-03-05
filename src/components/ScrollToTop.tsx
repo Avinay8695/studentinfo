@@ -1,40 +1,30 @@
 import { useState, useEffect } from 'react';
 import { ArrowUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { hapticLight } from '@/utils/haptics';
 
 export function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const toggleVisibility = () => {
-      if (window.scrollY > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
-
-    window.addEventListener('scroll', toggleVisibility);
+    const toggleVisibility = () => setIsVisible(window.scrollY > 400);
+    window.addEventListener('scroll', toggleVisibility, { passive: true });
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
 
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    hapticLight();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (!isVisible) return null;
-
   return (
-    <Button
+    <button
       onClick={scrollToTop}
-      size="icon"
-      className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 h-11 w-11 sm:h-12 sm:w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground animate-fade-in"
+      className={`fixed bottom-[72px] md:bottom-6 right-3 sm:right-6 z-40 h-10 w-10 sm:h-11 sm:w-11 rounded-xl shadow-lg bg-card/90 backdrop-blur-xl border border-border/50 text-foreground flex items-center justify-center transition-all duration-300 hover:bg-primary hover:text-primary-foreground hover:shadow-primary/20 active:scale-90 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+      }`}
       aria-label="Scroll to top"
     >
-      <ArrowUp className="w-5 h-5" />
-    </Button>
+      <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5" />
+    </button>
   );
 }
