@@ -20,6 +20,7 @@ import logoImage from '@/assets/logo-success-desirous.jpg';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { logUserLogin } from '@/utils/logger';
+import { ForgotPasswordDialog } from '@/components/ForgotPasswordDialog';
 
 const emailSchema = z.string().trim().email('Invalid email address').max(255, 'Email too long');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password too long');
@@ -38,6 +39,7 @@ export default function Auth() {
     fullName: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && !loading) {
@@ -244,6 +246,17 @@ export default function Auth() {
                   {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
                 </div>
 
+                {/* Forgot Password */}
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setForgotOpen(true)}
+                    className="text-xs text-white/50 hover:text-white/80 transition-colors underline underline-offset-2"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+
                 {/* Submit Button */}
                 <Button
                   type="submit"
@@ -353,6 +366,8 @@ export default function Auth() {
             By continuing, you agree to our Terms of Service
           </p>
         </div>
+
+        <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} />
       </div>
     </div>
   );
