@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 const emailSchema = z.string().trim().email('Invalid email address').max(255, 'Email too long');
+const PASSWORD_RESET_REDIRECT_URL = import.meta.env.VITE_PASSWORD_RESET_REDIRECT_URL?.trim() || 'https://studentinfo.lovable.app/reset-password';
 
 interface ForgotPasswordDialogProps {
   open: boolean;
@@ -43,7 +44,7 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
     setLoading(true);
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: PASSWORD_RESET_REDIRECT_URL,
       });
 
       if (resetError) {
