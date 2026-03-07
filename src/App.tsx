@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,19 @@ import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
+function RecoveryRedirectHandler() {
+  useEffect(() => {
+    const { pathname, hash } = window.location;
+    const isRecoveryLink = hash.includes("type=recovery") || hash.includes("access_token=");
+
+    if (isRecoveryLink && pathname !== "/reset-password") {
+      window.location.replace(`/reset-password${hash}`);
+    }
+  }, []);
+
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
@@ -23,6 +37,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <RecoveryRedirectHandler />
           <Routes>
             <Route path="/" element={
               <ProtectedRoute>
@@ -53,3 +68,4 @@ const App = () => (
 );
 
 export default App;
+

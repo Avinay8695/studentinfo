@@ -22,18 +22,35 @@ export default function ResetPassword() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Listen for the PASSWORD_RECOVERY event
+    const checkRecoveryState = async () => {
+      const hash = window.location.hash;
+      const search = window.location.search;
+
+      const hasRecoveryToken =
+        hash.includes('type=recovery') ||
+        hash.includes('access_token=') ||
+        search.includes('type=recovery') ||
+        search.includes('access_token=');
+
+      if (hasRecoveryToken) {
+        setIsRecovery(true);
+        return;
+      }
+
+      // Fallback: if recovery has already established a session before component mounted
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setIsRecovery(true);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
         setIsRecovery(true);
       }
     });
 
-    // Also check hash params for type=recovery
-    const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
-      setIsRecovery(true);
-    }
+    checkRecoveryState();
 
     return () => subscription.unsubscribe();
   }, []);
