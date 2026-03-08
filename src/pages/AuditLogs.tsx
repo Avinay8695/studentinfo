@@ -257,6 +257,66 @@ export default function AuditLogs() {
     setActionFilter('all'); setEntityFilter('all'); setDateFilter('all'); setSearchQuery(''); setCurrentPage(1);
   };
 
+  // Restore deleted student
+  const handleRestoreStudent = async (log: AuditLog) => {
+    const before = log.details?.before as Record<string, unknown> | undefined;
+    if (!before) return;
+
+    setRestoring(true);
+    try {
+      const { data: student, error: insertError } = await supabase
+        .from('students')
+        .insert({
+          full_name: before.full_name as string,
+          course: before.course as string,
+          batch: (before.batch as string) || null,
+          mobile_number: (before.mobile_number as string) || null,
+          fees_amount: Number(before.fees_amount) || 0,
+          monthly_fee: Number(before.monthly_fee) || 0,
+          duration_months: Number(before.duration_months) || 1,
+          fees_status: (before.fees_status as string) || 'not_paid',
+          enrollment_date: (before.enrollment_date as string) || new Date().toISOString().split('T')[0],
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // Generate monthly payments
+      const enrollmentDate = (before.enrollment_date as string) || new Date().toISOString().split('T')[0];
+      const payments = generateMonthlyPayments(
+        enrollmentDate,
+        Number(before.duration_months) || 1,
+        Number(before.fees_amount) || 0
+      );
+
+      if (payments.length > 0) {
+        const paymentRows = payments.map(p => ({
+          student_id: student.id,
+          month: p.month + 1,
+          year: p.year,
+          amount: p.amount,
+          is_paid: false,
+        }));
+        await supabase.from('monthly_payments').insert(paymentRows);
+      }
+
+      // Log the restore
+      await logStudentCreate(student.id, {
+        full_name: before.full_name,
+        course: before.course,
+        description: `Restored deleted student: ${before.full_name}`,
+      });
+
+      toast.success(`Student "${before.full_name}" restored successfully!`);
+      setSelectedLog(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to restore student');
+    } finally {
+      setRestoring(false);
+    }
+  };
+
   // Stats
   const stats = useMemo(() => ({
     total: allLogs.length,
