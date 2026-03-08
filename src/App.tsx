@@ -14,6 +14,7 @@ import AuditLogs from "./pages/AuditLogs";
 import PendingApproval from "./pages/PendingApproval";
 import Banned from "./pages/Banned";
 import ResetPassword from "./pages/ResetPassword";
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
