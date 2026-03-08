@@ -141,9 +141,12 @@ export function SwipeableStudentCard({
       >
         {/* Status indicator line */}
         <div className={`absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl ${
-          hasOverdue ? 'bg-gradient-to-r from-rose-500 via-amber-500 to-transparent' :
+          hasOverdue && overdueSeverity === 'critical' ? 'bg-gradient-to-r from-rose-500 via-red-500 to-transparent' :
+          hasOverdue && overdueSeverity === 'warning' ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-transparent' :
+          hasOverdue ? 'bg-gradient-to-r from-blue-500 via-blue-400 to-transparent' :
           progressPercent === 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
           'bg-gradient-to-r from-primary/50 to-transparent'
+        }`} />
         }`} />
 
         {/* Collapsed header - always visible */}
