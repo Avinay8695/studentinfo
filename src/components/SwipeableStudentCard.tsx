@@ -94,6 +94,13 @@ export function SwipeableStudentCard({
   const now = new Date();
   const overduePayments = payments.filter(p => !p.isPaid && (p.year < now.getFullYear() || (p.year === now.getFullYear() && p.month < now.getMonth())));
   const hasOverdue = overduePayments.length > 0;
+  const overdueSeverity = overduePayments.length >= 3 ? 'critical' : overduePayments.length === 2 ? 'warning' : 'mild';
+  const severityColors = {
+    mild: { badge: 'bg-blue-500/90 text-white border-blue-400/30 shadow-blue-500/30', avatar: 'from-blue-500 to-blue-600 shadow-blue-500/20', dot: 'bg-blue-500', pill: 'bg-blue-500/10 text-blue-500 border-blue-500/15' },
+    warning: { badge: 'bg-amber-500/90 text-white border-amber-400/30 shadow-amber-500/30', avatar: 'from-amber-500 to-orange-500 shadow-amber-500/20', dot: 'bg-amber-500', pill: 'bg-amber-500/10 text-amber-500 border-amber-500/15' },
+    critical: { badge: 'bg-rose-500/90 text-white border-rose-400/30 shadow-rose-500/30', avatar: 'from-rose-500 to-red-600 shadow-rose-500/20', dot: 'bg-rose-500', pill: 'bg-rose-500/10 text-rose-500 border-rose-500/15' },
+  };
+  const sColors = hasOverdue ? severityColors[overdueSeverity] : null;
 
   return (
     <div className="relative overflow-hidden rounded-2xl" ref={cardRef}>
