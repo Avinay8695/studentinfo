@@ -398,6 +398,18 @@ export default function AuditLogs() {
         </Select>
       </div>
       <div>
+        <label className="text-sm font-medium text-foreground mb-2 block">User</label>
+        <Select value={userFilter} onValueChange={v => { setUserFilter(v); setCurrentPage(1); }}>
+          <SelectTrigger className="w-full h-11 bg-background"><SelectValue placeholder="User" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Users</SelectItem>
+            {uniqueUsers.map(u => (
+              <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
         <label className="text-sm font-medium text-foreground mb-2 block">Date Range</label>
         <Select value={dateFilter} onValueChange={v => { setDateFilter(v); setCurrentPage(1); }}>
           <SelectTrigger className="w-full h-11 bg-background"><SelectValue placeholder="Date Range" /></SelectTrigger>
