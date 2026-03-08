@@ -114,7 +114,7 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
                 
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                    <h1 className={`font-extrabold tracking-tight font-display truncate drop-shadow-md transition-all duration-500 ${scrolled ? 'text-sm sm:text-base lg:text-lg text-foreground drop-shadow-none' : 'text-base sm:text-xl lg:text-2xl text-white'}`}>
+                    <h1 className={`font-extrabold tracking-tight font-display drop-shadow-md transition-all duration-500 ${scrolled ? 'text-[13px] sm:text-base lg:text-lg text-foreground drop-shadow-none' : 'text-[15px] sm:text-xl lg:text-2xl text-white'}`}>
                       Success Desirous
                     </h1>
                     <Sparkles className={`w-3.5 h-3.5 sm:w-4 sm:h-4 animate-pulse flex-shrink-0 transition-colors duration-500 ${scrolled ? 'text-yellow-500' : 'text-yellow-300 drop-shadow-lg'}`} />
