@@ -195,6 +195,7 @@ export default function AuditLogs() {
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [actionFilter, setActionFilter] = useState<string>('all');
   const [entityFilter, setEntityFilter] = useState<string>('all');
+  const [userFilter, setUserFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
@@ -216,11 +217,23 @@ export default function AuditLogs() {
     enabled: isAdmin,
   });
 
+  // Unique users for filter
+  const uniqueUsers = useMemo(() => {
+    const users = new Map<string, string>();
+    allLogs.forEach(l => {
+      if (l.performed_by && !users.has(l.performed_by)) {
+        users.set(l.performed_by, l.performed_by_name);
+      }
+    });
+    return Array.from(users.entries()).map(([id, name]) => ({ id, name }));
+  }, [allLogs]);
+
   // Client-side filtering
   const filteredLogs = useMemo(() => {
     let logs = allLogs;
     if (actionFilter !== 'all') logs = logs.filter(l => l.action_type === actionFilter);
     if (entityFilter !== 'all') logs = logs.filter(l => l.entity_type === entityFilter);
+    if (userFilter !== 'all') logs = logs.filter(l => l.performed_by === userFilter);
     if (dateFilter !== 'all') {
       const now = new Date();
       logs = logs.filter(l => {
@@ -244,17 +257,17 @@ export default function AuditLogs() {
       );
     }
     return logs;
-  }, [allLogs, actionFilter, entityFilter, dateFilter, searchQuery]);
+  }, [allLogs, actionFilter, entityFilter, userFilter, dateFilter, searchQuery]);
 
   // Pagination
   const totalPages = Math.ceil(filteredLogs.length / ITEMS_PER_PAGE);
   const paginatedLogs = filteredLogs.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
   const groupedLogs = groupLogsByDate(paginatedLogs);
 
-  const activeFilterCount = (actionFilter !== 'all' ? 1 : 0) + (entityFilter !== 'all' ? 1 : 0) + (dateFilter !== 'all' ? 1 : 0);
+  const activeFilterCount = (actionFilter !== 'all' ? 1 : 0) + (entityFilter !== 'all' ? 1 : 0) + (userFilter !== 'all' ? 1 : 0) + (dateFilter !== 'all' ? 1 : 0);
 
   const clearFilters = () => {
-    setActionFilter('all'); setEntityFilter('all'); setDateFilter('all'); setSearchQuery(''); setCurrentPage(1);
+    setActionFilter('all'); setEntityFilter('all'); setUserFilter('all'); setDateFilter('all'); setSearchQuery(''); setCurrentPage(1);
   };
 
   // Restore deleted student
@@ -381,6 +394,18 @@ export default function AuditLogs() {
             <SelectItem value="STUDENT">Student Management</SelectItem>
             <SelectItem value="PAYMENT">Payment</SelectItem>
             <SelectItem value="USER">Authentication</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-foreground mb-2 block">User</label>
+        <Select value={userFilter} onValueChange={v => { setUserFilter(v); setCurrentPage(1); }}>
+          <SelectTrigger className="w-full h-11 bg-background"><SelectValue placeholder="User" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Users</SelectItem>
+            {uniqueUsers.map(u => (
+              <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -514,6 +539,15 @@ export default function AuditLogs() {
                     <SelectItem value="STUDENT">Students</SelectItem>
                     <SelectItem value="PAYMENT">Payments</SelectItem>
                     <SelectItem value="USER">Auth</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={userFilter} onValueChange={v => { setUserFilter(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-[140px] h-10"><SelectValue placeholder="User" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    {uniqueUsers.map(u => (
+                      <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <Select value={dateFilter} onValueChange={v => { setDateFilter(v); setCurrentPage(1); }}>
