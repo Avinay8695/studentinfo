@@ -107,7 +107,7 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
                   <div className={`absolute -inset-0.5 rounded-xl sm:rounded-2xl p-[1.5px] ${scrolled ? 'bg-gradient-to-br from-primary/40 to-primary/10' : 'bg-gradient-to-br from-white/40 to-white/10'}`}>
                     <div className={`w-full h-full rounded-[10px] sm:rounded-[14px] ${scrolled ? 'bg-muted/50' : 'bg-black/10'} backdrop-blur-sm`} />
                   </div>
-                  <div className={`relative overflow-hidden shadow-2xl transition-all duration-500 rounded-xl sm:rounded-2xl group-hover:scale-105 ${scrolled ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14'}`}>
+                  <div className={`relative overflow-hidden shadow-2xl transition-all duration-500 rounded-xl sm:rounded-2xl group-hover:scale-105 ${scrolled ? 'w-7 h-7 sm:w-10 sm:h-10' : 'w-9 h-9 sm:w-12 sm:h-12 lg:w-14 lg:h-14'}`}>
                     <img src={logoImage} alt="Success Desirous Logo" className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
                   </div>
                 </button>
