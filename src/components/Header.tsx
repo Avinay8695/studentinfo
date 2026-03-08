@@ -192,10 +192,10 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
                 </div>
                 
                 {onViewPayments && students.length > 0 && (
-                  <NotificationBell students={students} onViewPayments={onViewPayments} />
+                  <NotificationBell students={students} onViewPayments={onViewPayments} scrolled={scrolled} />
                 )}
                 
-                <ThemeToggle />
+                <ThemeToggle scrolled={scrolled} />
                 
                 {user && (
                   <DropdownMenu>

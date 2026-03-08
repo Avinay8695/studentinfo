@@ -24,9 +24,10 @@ interface PendingStudent {
 interface NotificationBellProps {
   students: Student[];
   onViewPayments: (student: Student) => void;
+  scrolled?: boolean;
 }
 
-export function NotificationBell({ students, onViewPayments }: NotificationBellProps) {
+export function NotificationBell({ students, onViewPayments, scrolled = false }: NotificationBellProps) {
   const [open, setOpen] = useState(false);
   const [lastReadHash, setLastReadHash] = useState<string>(() => {
     return localStorage.getItem('notifications_read_hash') || '';
@@ -103,7 +104,11 @@ export function NotificationBell({ students, onViewPayments }: NotificationBellP
           variant="ghost"
           size="icon"
           onClick={() => hapticLight()}
-          className="relative w-10 h-10 bg-white/12 hover:bg-white/20 rounded-xl backdrop-blur-md border border-white/20 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:border-white/30 group"
+          className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-xl backdrop-blur-md border shadow-lg transition-all duration-300 hover:shadow-xl group ${
+            scrolled
+              ? 'bg-muted/50 hover:bg-muted border-border text-foreground'
+              : 'bg-white/12 hover:bg-white/20 border-white/20 text-white hover:border-white/30'
+          }`}
         >
           <Bell className={`w-[18px] h-[18px] transition-transform duration-300 ${open ? 'scale-110' : 'group-hover:scale-105'}`} />
           {/* Unread indicator dot */}
