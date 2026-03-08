@@ -849,6 +849,35 @@ export default function AuditLogs() {
                 </div>
               )}
 
+              {/* Security Info for LOGIN events */}
+              {selectedLog.action_type === 'LOGIN' && (selectedLog.details?.ip_address || selectedLog.details?.browser) && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Shield className="w-4 h-4" /> Security Info
+                  </h4>
+                  <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20 space-y-3">
+                    {selectedLog.details?.ip_address && (
+                      <div className="flex items-center gap-3">
+                        <Globe className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">IP Address</p>
+                          <p className="text-sm font-mono text-foreground">{String(selectedLog.details.ip_address)}</p>
+                        </div>
+                      </div>
+                    )}
+                    {selectedLog.details?.browser && (
+                      <div className="flex items-center gap-3">
+                        <Monitor className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Browser & OS</p>
+                          <p className="text-sm text-foreground">{String(selectedLog.details.browser)} on {String(selectedLog.details.os || 'Unknown')}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="pt-4 border-t border-border">
                 <h4 className="text-sm font-medium text-muted-foreground mb-3">Details</h4>
                 <dl className="space-y-2 text-sm">
