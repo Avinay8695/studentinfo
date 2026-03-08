@@ -40,6 +40,7 @@ export default function Auth() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [forgotOpen, setForgotOpen] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && !loading) {
