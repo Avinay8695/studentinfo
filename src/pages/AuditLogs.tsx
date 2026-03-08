@@ -33,6 +33,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { generateMonthlyPayments } from '@/hooks/useStudents';
+import { logStudentCreate } from '@/utils/logger';
 
 interface AuditLog {
   id: string;

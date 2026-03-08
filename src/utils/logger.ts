@@ -106,12 +106,41 @@ export const logPaymentUpdate = (
     details: { before, after, description: `Updated payment for: ${studentName}` },
   });
 
-export const logUserLogin = () =>
-  logActivity({
+// Simple UA parser
+function parseUserAgent(ua: string): { browser: string; os: string } {
+  let browser = 'Unknown Browser';
+  let os = 'Unknown OS';
+
+  // Browser detection
+  if (ua.includes('Firefox/')) browser = 'Firefox';
+  else if (ua.includes('Edg/')) browser = 'Microsoft Edge';
+  else if (ua.includes('Chrome/') && !ua.includes('Edg/')) browser = 'Google Chrome';
+  else if (ua.includes('Safari/') && !ua.includes('Chrome/')) browser = 'Safari';
+  else if (ua.includes('Opera/') || ua.includes('OPR/')) browser = 'Opera';
+
+  // OS detection
+  if (ua.includes('Windows')) os = 'Windows';
+  else if (ua.includes('Mac OS')) os = 'macOS';
+  else if (ua.includes('Linux') && !ua.includes('Android')) os = 'Linux';
+  else if (ua.includes('Android')) os = 'Android';
+  else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+
+  return { browser, os };
+}
+
+export const logUserLogin = (securityInfo?: { ip?: string; userAgent?: string }) => {
+  const parsed = securityInfo?.userAgent ? parseUserAgent(securityInfo.userAgent) : undefined;
+  return logActivity({
     action: 'LOGIN',
     entityType: 'USER',
-    details: { description: 'User logged in' },
+    details: {
+      description: 'User logged in',
+      ...(securityInfo?.ip && { ip_address: securityInfo.ip }),
+      ...(securityInfo?.userAgent && { user_agent: securityInfo.userAgent }),
+      ...(parsed && { browser: parsed.browser, os: parsed.os }),
+    },
   });
+};
 
 export const logUserBan = (userId: string, email: string, isBanned: boolean) =>
   logActivity({

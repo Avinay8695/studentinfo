@@ -113,8 +113,14 @@ export default function Auth() {
           return;
         }
         
-        // Log login activity
-        await logUserLogin();
+        // Log login activity with IP and device info
+        let ip: string | undefined;
+        try {
+          const res = await fetch('https://api.ipify.org?format=json');
+          const data = await res.json();
+          ip = data.ip;
+        } catch { /* IP fetch failed, continue without it */ }
+        await logUserLogin({ ip, userAgent: navigator.userAgent });
         
         toast.success('Welcome back!');
         // Navigation will be handled by the useEffect based on isApproved status
