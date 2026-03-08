@@ -154,13 +154,13 @@ export function SwipeableStudentCard({
               <div className="relative flex-shrink-0">
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg ${
                   hasOverdue 
-                    ? 'bg-gradient-to-br from-rose-500 to-amber-500 shadow-rose-500/20' 
+                    ? `bg-gradient-to-br ${sColors!.avatar}` 
                     : 'bg-gradient-to-br from-primary to-accent shadow-primary/20'
                 }`}>
                   {student.fullName.charAt(0).toUpperCase()}
                 </div>
                 {hasOverdue && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-card flex items-center justify-center">
+                  <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 ${sColors!.dot} rounded-full border-2 border-card flex items-center justify-center`}>
                     <AlertTriangle className="w-2 h-2 text-white" />
                   </div>
                 )}
