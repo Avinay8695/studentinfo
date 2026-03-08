@@ -817,16 +817,33 @@ export default function AuditLogs() {
                       ))}
                     </div>
                   ) : selectedLog.action_type === 'DELETE' && selectedLog.details?.before ? (
-                    <div className="p-4 rounded-lg bg-red-500/5 border border-red-500/20">
-                      <p className="text-sm text-red-600 dark:text-red-400 mb-3">Deleted record details:</p>
-                      <div className="space-y-2">
-                        {Object.entries(selectedLog.details.before as Record<string, unknown>).map(([key, value]) => (
-                          <div key={key} className="flex justify-between items-center py-1">
-                            <span className="text-xs text-muted-foreground">{fieldLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                            <span className="text-xs text-foreground">{formatValue(key, value)}</span>
-                          </div>
-                        ))}
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-lg bg-red-500/5 border border-red-500/20">
+                        <p className="text-sm text-red-600 dark:text-red-400 mb-3">Deleted record details:</p>
+                        <div className="space-y-2">
+                          {Object.entries(selectedLog.details.before as Record<string, unknown>).map(([key, value]) => (
+                            <div key={key} className="flex justify-between items-center py-1">
+                              <span className="text-xs text-muted-foreground">{fieldLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                              <span className="text-xs text-foreground">{formatValue(key, value)}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
+                      {/* Restore Button for deleted students */}
+                      {selectedLog.entity_type === 'STUDENT' && (
+                        <Button
+                          onClick={() => handleRestoreStudent(selectedLog)}
+                          disabled={restoring}
+                          className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          {restoring ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <RotateCcw className="w-4 h-4" />
+                          )}
+                          {restoring ? 'Restoring...' : 'Restore This Student'}
+                        </Button>
+                      )}
                     </div>
                   ) : null}
                 </div>
