@@ -195,6 +195,7 @@ export default function AuditLogs() {
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [actionFilter, setActionFilter] = useState<string>('all');
   const [entityFilter, setEntityFilter] = useState<string>('all');
+  const [userFilter, setUserFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
