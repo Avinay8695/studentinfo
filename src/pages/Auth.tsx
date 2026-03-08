@@ -21,6 +21,8 @@ import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { logUserLogin } from '@/utils/logger';
 import { ForgotPasswordDialog } from '@/components/ForgotPasswordDialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Link } from 'react-router-dom';
 
 const emailSchema = z.string().trim().email('Invalid email address').max(255, 'Email too long');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password too long');
@@ -40,6 +42,7 @@ export default function Auth() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [forgotOpen, setForgotOpen] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && !loading) {
@@ -350,11 +353,27 @@ export default function Auth() {
                   {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
                 </div>
 
+                {/* Terms Checkbox */}
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="terms"
+                    checked={agreedToTerms}
+                    onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                    className="mt-0.5 border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <Label htmlFor="terms" className="text-xs text-white/60 leading-relaxed cursor-pointer">
+                    I agree to the{' '}
+                    <Link to="/terms" target="_blank" className="text-primary hover:underline underline-offset-2">
+                      Terms & Conditions
+                    </Link>
+                  </Label>
+                </div>
+
                 {/* Submit Button */}
                 <Button
                   type="submit"
                   className="w-full min-h-[48px] font-semibold text-base bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all duration-300 rounded-xl"
-                  disabled={formLoading}
+                  disabled={formLoading || !agreedToTerms}
                 >
                   {formLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -371,7 +390,10 @@ export default function Auth() {
 
           {/* Footer */}
           <p className="text-center text-white/40 text-xs mt-6">
-            By continuing, you agree to our Terms of Service
+            By continuing, you agree to our{' '}
+            <Link to="/terms" target="_blank" className="text-white/60 hover:text-white/80 underline underline-offset-2 transition-colors">
+              Terms & Conditions
+            </Link>
           </p>
         </div>
 

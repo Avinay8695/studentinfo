@@ -14,6 +14,7 @@ import AuditLogs from "./pages/AuditLogs";
 import PendingApproval from "./pages/PendingApproval";
 import Banned from "./pages/Banned";
 import ResetPassword from "./pages/ResetPassword";
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/pending-approval" element={<PendingApproval />} />
             <Route path="/banned" element={<Banned />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/users" element={
               <ProtectedRoute requireAdmin>
                 <UserManagement />
