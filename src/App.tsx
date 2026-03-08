@@ -49,6 +49,7 @@ const App = () => (
             <Route path="/pending-approval" element={<PendingApproval />} />
             <Route path="/banned" element={<Banned />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/users" element={
               <ProtectedRoute requireAdmin>
                 <UserManagement />

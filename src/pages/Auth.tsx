@@ -353,11 +353,27 @@ export default function Auth() {
                   {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
                 </div>
 
+                {/* Terms Checkbox */}
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="terms"
+                    checked={agreedToTerms}
+                    onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                    className="mt-0.5 border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <Label htmlFor="terms" className="text-xs text-white/60 leading-relaxed cursor-pointer">
+                    I agree to the{' '}
+                    <Link to="/terms" target="_blank" className="text-primary hover:underline underline-offset-2">
+                      Terms & Conditions
+                    </Link>
+                  </Label>
+                </div>
+
                 {/* Submit Button */}
                 <Button
                   type="submit"
                   className="w-full min-h-[48px] font-semibold text-base bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all duration-300 rounded-xl"
-                  disabled={formLoading}
+                  disabled={formLoading || !agreedToTerms}
                 >
                   {formLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
