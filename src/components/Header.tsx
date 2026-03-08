@@ -142,7 +142,7 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
                   variant="ghost"
                   size="icon"
                   onClick={() => setCmdOpen(true)}
-                  className={`w-9 h-9 sm:w-auto sm:h-9 sm:px-3 rounded-xl backdrop-blur-md border transition-all duration-300 ${
+                  className={`w-8 h-8 sm:w-auto sm:h-9 sm:px-3 rounded-xl backdrop-blur-md border transition-all duration-300 ${
                     scrolled 
                       ? 'bg-muted/50 hover:bg-muted border-border text-foreground' 
                       : 'bg-white/12 hover:bg-white/20 border-white/20 text-white'
