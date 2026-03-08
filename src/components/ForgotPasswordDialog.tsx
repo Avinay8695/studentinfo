@@ -43,6 +43,14 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
 
     setLoading(true);
     try {
+      // Check if email is registered
+      const { data: emailExists } = await supabase.rpc('check_email_exists', { _email: email });
+      if (!emailExists) {
+        setError('यह email registered नहीं है। पहले Sign Up करें।');
+        setLoading(false);
+        return;
+      }
+
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: PASSWORD_RESET_REDIRECT_URL,
       });

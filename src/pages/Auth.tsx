@@ -93,11 +93,19 @@ export default function Auth() {
 
     try {
       if (activeTab === 'login') {
+        // Check if email is registered
+        const { data: emailExists } = await supabase.rpc('check_email_exists', { _email: formData.email });
+        if (!emailExists) {
+          toast.error('यह email registered नहीं है। पहले Sign Up करें।');
+          setFormLoading(false);
+          return;
+        }
+
         const { error } = await signIn(formData.email, formData.password);
         
         if (error) {
           toast.error(error.message.includes('Invalid login credentials') 
-            ? 'Invalid email or password' 
+            ? 'गलत password डाला है' 
             : error.message);
           return;
         }
