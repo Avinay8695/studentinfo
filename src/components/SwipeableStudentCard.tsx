@@ -178,6 +178,28 @@ export function SwipeableStudentCard({
                     </>
                   )}
                 </div>
+                {/* Mini summary in collapsed state */}
+                {!isExpanded && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] font-bold text-card-foreground">{formatCurrency(student.feesAmount)}</span>
+                    {totalMonths > 0 && (
+                      <>
+                        <span className="text-muted-foreground/30">•</span>
+                        <span className={`text-[10px] font-bold ${
+                          progressPercent === 100 ? 'text-emerald-500' : progressPercent > 50 ? 'text-primary' : 'text-amber-500'
+                        }`}>
+                          {paidCount}/{totalMonths} paid
+                        </span>
+                        <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${progressPercent === 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-primary to-accent'}`}
+                            style={{ width: `${progressPercent}%` }}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             
