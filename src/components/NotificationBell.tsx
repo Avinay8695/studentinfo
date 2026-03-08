@@ -27,7 +27,7 @@ interface NotificationBellProps {
   scrolled?: boolean;
 }
 
-export function NotificationBell({ students, onViewPayments }: NotificationBellProps) {
+export function NotificationBell({ students, onViewPayments, scrolled = false }: NotificationBellProps) {
   const [open, setOpen] = useState(false);
   const [lastReadHash, setLastReadHash] = useState<string>(() => {
     return localStorage.getItem('notifications_read_hash') || '';
