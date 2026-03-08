@@ -135,7 +135,7 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
               </div>
 
               {/* Right side */}
-              <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 flex-shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-shrink-0">
                 
                 {/* Search trigger */}
                 <Button
