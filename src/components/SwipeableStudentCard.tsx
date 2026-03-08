@@ -163,8 +163,9 @@ export function SwipeableStudentCard({
                 <div className="flex items-center gap-1.5">
                   <p className="font-bold text-card-foreground text-sm truncate">{student.fullName}</p>
                   {hasOverdue && (
-                    <Badge variant="destructive" className="text-[8px] px-1.5 py-0 h-3.5 gap-0.5 flex-shrink-0 font-bold">
-                      {overduePayments.length}mo
+                    <Badge variant="destructive" className="text-[9px] px-2 py-0.5 h-4.5 gap-1 flex-shrink-0 font-extrabold animate-pulse shadow-sm shadow-destructive/30 border border-destructive/20">
+                      <AlertTriangle className="w-2.5 h-2.5" />
+                      {overduePayments.length} overdue
                     </Badge>
                   )}
                 </div>
