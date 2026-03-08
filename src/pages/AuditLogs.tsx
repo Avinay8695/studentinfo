@@ -264,7 +264,7 @@ export default function AuditLogs() {
   const paginatedLogs = filteredLogs.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
   const groupedLogs = groupLogsByDate(paginatedLogs);
 
-  const activeFilterCount = (actionFilter !== 'all' ? 1 : 0) + (entityFilter !== 'all' ? 1 : 0) + (dateFilter !== 'all' ? 1 : 0);
+  const activeFilterCount = (actionFilter !== 'all' ? 1 : 0) + (entityFilter !== 'all' ? 1 : 0) + (userFilter !== 'all' ? 1 : 0) + (dateFilter !== 'all' ? 1 : 0);
 
   const clearFilters = () => {
     setActionFilter('all'); setEntityFilter('all'); setDateFilter('all'); setSearchQuery(''); setCurrentPage(1);
