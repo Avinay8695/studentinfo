@@ -24,6 +24,7 @@ interface PendingStudent {
 interface NotificationBellProps {
   students: Student[];
   onViewPayments: (student: Student) => void;
+  scrolled?: boolean;
 }
 
 export function NotificationBell({ students, onViewPayments }: NotificationBellProps) {
