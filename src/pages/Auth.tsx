@@ -390,7 +390,10 @@ export default function Auth() {
 
           {/* Footer */}
           <p className="text-center text-white/40 text-xs mt-6">
-            By continuing, you agree to our Terms of Service
+            By continuing, you agree to our{' '}
+            <Link to="/terms" target="_blank" className="text-white/60 hover:text-white/80 underline underline-offset-2 transition-colors">
+              Terms & Conditions
+            </Link>
           </p>
         </div>
 
