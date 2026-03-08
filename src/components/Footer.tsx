@@ -23,38 +23,38 @@ export function Footer() {
         </div>
 
         <div className="relative z-10 px-3 sm:px-6">
-          <div className="container max-w-7xl mx-auto py-6 sm:py-8">
-            <div className="flex flex-col gap-5">
+          <div className="container max-w-7xl mx-auto py-4 sm:py-8">
+            <div className="flex flex-col gap-3 sm:gap-5">
               
-              {/* Branding row */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
+              {/* Branding + Feature pills - single row on mobile */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-2.5">
                   <div className="relative flex-shrink-0">
                     <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-br from-white/40 to-white/10 p-[1.5px]">
                       <div className="w-full h-full rounded-[10px] bg-black/10 backdrop-blur-sm" />
                     </div>
-                    <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-2xl">
+                    <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-2xl">
                       <img src={logoImage} alt="Success Desirous Logo" className="w-full h-full object-cover" />
                     </div>
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-sm sm:text-base font-extrabold tracking-tight font-display text-white drop-shadow-md">
+                      <span className="text-xs sm:text-base font-extrabold tracking-tight font-display text-white drop-shadow-md">
                         Success Desirous
                       </span>
-                      <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse drop-shadow-lg" />
+                      <Sparkles className="w-3 h-3 text-yellow-300 animate-pulse drop-shadow-lg" />
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <GraduationCap className="w-3 h-3 text-white/60" />
-                      <p className="text-white/70 text-[10px] font-medium tracking-widest uppercase">
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <GraduationCap className="w-2.5 h-2.5 text-white/60" />
+                      <p className="text-white/70 text-[9px] sm:text-[10px] font-medium tracking-widest uppercase">
                         Student Management
                       </p>
                     </div>
                   </div>
                 </div>
                 
-                {/* Feature pills */}
-                <div className="flex flex-wrap items-center justify-center gap-2">
+                {/* Feature pills - smaller on mobile */}
+                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
                   {[
                     { icon: Cloud, label: 'Cloud Sync' },
                     { icon: Shield, label: 'Secure' },
@@ -63,10 +63,10 @@ export function Footer() {
                   ].map((feature) => (
                     <div 
                       key={feature.label}
-                      className="group flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/15 hover:bg-white/20 transition-all duration-300 cursor-default hover:scale-105"
+                      className="group flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/15 hover:bg-white/20 transition-all duration-300 cursor-default hover:scale-105"
                     >
-                      <feature.icon className="w-3 h-3 text-white/80 transition-transform duration-300 group-hover:scale-110" />
-                      <span className="text-xs font-medium text-white/90">{feature.label}</span>
+                      <feature.icon className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white/80" />
+                      <span className="text-[10px] sm:text-xs font-medium text-white/90">{feature.label}</span>
                     </div>
                   ))}
                 </div>
@@ -75,28 +75,28 @@ export function Footer() {
               {/* Divider */}
               <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               
-              {/* Developer credit section */}
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
+              {/* Developer credit - compact on mobile */}
+              <div className="flex items-center gap-3 sm:gap-5">
                 <img
                   src={developerImage}
                   alt="Avinay Gupta"
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-white/20 shadow-lg flex-shrink-0"
+                  className="w-10 h-10 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-white/20 shadow-lg flex-shrink-0"
                 />
-                <div className="text-center sm:text-left space-y-1">
-                  <div className="flex items-center justify-center sm:justify-start gap-1.5">
-                    <Code2 className="w-3.5 h-3.5 text-yellow-300" />
-                    <span className="text-sm font-semibold text-white font-display">Built by Avinay Gupta</span>
+                <div className="space-y-0.5 sm:space-y-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <Code2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-yellow-300" />
+                    <span className="text-xs sm:text-sm font-semibold text-white font-display">Built by Avinay Gupta</span>
                   </div>
-                  <p className="text-xs text-white/60">Full-Stack Developer &amp; Software Engineering Student</p>
-                  <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3 text-[11px] text-white/50">
+                  <p className="text-[10px] sm:text-xs text-white/60 truncate">Full-Stack Developer & Software Engineering Student</p>
+                  <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] text-white/50">
                     <a href="tel:8695721922" className="inline-flex items-center gap-1 hover:text-white/80 transition-colors">
-                      <Phone className="w-3 h-3" />
+                      <Phone className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                       <span>8695721922</span>
                     </a>
-                    <span className="hidden sm:inline text-white/20">|</span>
-                    <a href="mailto:avinay.gupta@zohomail.in" className="inline-flex items-center gap-1 hover:text-white/80 transition-colors">
-                      <Mail className="w-3 h-3" />
-                      <span>avinay.gupta@zohomail.in</span>
+                    <span className="text-white/20">|</span>
+                    <a href="mailto:avinay.gupta@zohomail.in" className="inline-flex items-center gap-1 hover:text-white/80 transition-colors truncate">
+                      <Mail className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                      <span className="truncate">avinay.gupta@zohomail.in</span>
                     </a>
                   </div>
                 </div>
@@ -106,16 +106,16 @@ export function Footer() {
               <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
               {/* Bottom row */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-white/70">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-white/70">
                   <span>Made with</span>
-                  <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400 animate-pulse" />
+                  <Heart className="w-3 h-3 text-rose-400 fill-rose-400 animate-pulse" />
                   <span>for educators</span>
-                  <span className="mx-1 hidden sm:inline text-white/30">•</span>
+                  <span className="mx-0.5 text-white/30">•</span>
                   <span className="font-semibold text-white">© {currentYear}</span>
                 </div>
                 
-                <span className="text-[10px] text-white/60 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/15 font-medium">
+                <span className="text-[9px] sm:text-[10px] text-white/60 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/15 font-medium">
                   v2.0.0 <span className="text-yellow-300 ml-1">Premium</span>
                 </span>
               </div>
