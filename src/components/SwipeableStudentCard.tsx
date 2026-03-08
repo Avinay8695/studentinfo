@@ -147,7 +147,6 @@ export function SwipeableStudentCard({
           progressPercent === 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
           'bg-gradient-to-r from-primary/50 to-transparent'
         }`} />
-        }`} />
 
         {/* Collapsed header - always visible */}
         <div className="p-4 pb-3">
