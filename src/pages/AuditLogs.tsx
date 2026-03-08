@@ -4,7 +4,7 @@ import { format, formatDistanceToNow, isToday, isYesterday, isThisWeek, parseISO
 import { 
   Plus, Pencil, Trash2, LogIn, LogOut, Filter, User, GraduationCap, CreditCard,
   ChevronRight, Calendar, Clock, ArrowLeft, Search, Download, FileSpreadsheet,
-  FileJson, LayoutList, Activity, ChevronLeft, X, Shield
+  FileJson, LayoutList, Activity, ChevronLeft, X, Shield, Globe, Monitor, RotateCcw, Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,6 +33,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { generateMonthlyPayments } from '@/hooks/useStudents';
+import { logStudentCreate } from '@/utils/logger';
 
 interface AuditLog {
   id: string;
@@ -198,6 +200,7 @@ export default function AuditLogs() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'timeline' | 'table'>('timeline');
   const [currentPage, setCurrentPage] = useState(1);
+  const [restoring, setRestoring] = useState(false);
 
   const { data: allLogs = [], isLoading } = useQuery({
     queryKey: ['audit-logs'],
@@ -252,6 +255,66 @@ export default function AuditLogs() {
 
   const clearFilters = () => {
     setActionFilter('all'); setEntityFilter('all'); setDateFilter('all'); setSearchQuery(''); setCurrentPage(1);
+  };
+
+  // Restore deleted student
+  const handleRestoreStudent = async (log: AuditLog) => {
+    const before = log.details?.before as Record<string, unknown> | undefined;
+    if (!before) return;
+
+    setRestoring(true);
+    try {
+      const { data: student, error: insertError } = await supabase
+        .from('students')
+        .insert({
+          full_name: before.full_name as string,
+          course: before.course as string,
+          batch: (before.batch as string) || null,
+          mobile_number: (before.mobile_number as string) || null,
+          fees_amount: Number(before.fees_amount) || 0,
+          monthly_fee: Number(before.monthly_fee) || 0,
+          duration_months: Number(before.duration_months) || 1,
+          fees_status: (before.fees_status as string) || 'not_paid',
+          enrollment_date: (before.enrollment_date as string) || new Date().toISOString().split('T')[0],
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // Generate monthly payments
+      const enrollmentDate = (before.enrollment_date as string) || new Date().toISOString().split('T')[0];
+      const payments = generateMonthlyPayments(
+        enrollmentDate,
+        Number(before.duration_months) || 1,
+        Number(before.fees_amount) || 0
+      );
+
+      if (payments.length > 0) {
+        const paymentRows = payments.map(p => ({
+          student_id: student.id,
+          month: p.month + 1,
+          year: p.year,
+          amount: p.amount,
+          is_paid: false,
+        }));
+        await supabase.from('monthly_payments').insert(paymentRows);
+      }
+
+      // Log the restore
+      await logStudentCreate(student.id, {
+        full_name: before.full_name,
+        course: before.course,
+        description: `Restored deleted student: ${before.full_name}`,
+      });
+
+      toast.success(`Student "${before.full_name}" restored successfully!`);
+      setSelectedLog(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to restore student');
+    } finally {
+      setRestoring(false);
+    }
   };
 
   // Stats
@@ -754,18 +817,64 @@ export default function AuditLogs() {
                       ))}
                     </div>
                   ) : selectedLog.action_type === 'DELETE' && selectedLog.details?.before ? (
-                    <div className="p-4 rounded-lg bg-red-500/5 border border-red-500/20">
-                      <p className="text-sm text-red-600 dark:text-red-400 mb-3">Deleted record details:</p>
-                      <div className="space-y-2">
-                        {Object.entries(selectedLog.details.before as Record<string, unknown>).map(([key, value]) => (
-                          <div key={key} className="flex justify-between items-center py-1">
-                            <span className="text-xs text-muted-foreground">{fieldLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                            <span className="text-xs text-foreground">{formatValue(key, value)}</span>
-                          </div>
-                        ))}
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-lg bg-red-500/5 border border-red-500/20">
+                        <p className="text-sm text-red-600 dark:text-red-400 mb-3">Deleted record details:</p>
+                        <div className="space-y-2">
+                          {Object.entries(selectedLog.details.before as Record<string, unknown>).map(([key, value]) => (
+                            <div key={key} className="flex justify-between items-center py-1">
+                              <span className="text-xs text-muted-foreground">{fieldLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                              <span className="text-xs text-foreground">{formatValue(key, value)}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
+                      {/* Restore Button for deleted students */}
+                      {selectedLog.entity_type === 'STUDENT' && (
+                        <Button
+                          onClick={() => handleRestoreStudent(selectedLog)}
+                          disabled={restoring}
+                          className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          {restoring ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <RotateCcw className="w-4 h-4" />
+                          )}
+                          {restoring ? 'Restoring...' : 'Restore This Student'}
+                        </Button>
+                      )}
                     </div>
                   ) : null}
+                </div>
+              )}
+
+              {/* Security Info for LOGIN events */}
+              {selectedLog.action_type === 'LOGIN' && (selectedLog.details?.ip_address || selectedLog.details?.browser) && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Shield className="w-4 h-4" /> Security Info
+                  </h4>
+                  <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20 space-y-3">
+                    {selectedLog.details?.ip_address && (
+                      <div className="flex items-center gap-3">
+                        <Globe className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">IP Address</p>
+                          <p className="text-sm font-mono text-foreground">{String(selectedLog.details.ip_address)}</p>
+                        </div>
+                      </div>
+                    )}
+                    {selectedLog.details?.browser && (
+                      <div className="flex items-center gap-3">
+                        <Monitor className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Browser & OS</p>
+                          <p className="text-sm text-foreground">{String(selectedLog.details.browser)} on {String(selectedLog.details.os || 'Unknown')}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
