@@ -107,14 +107,14 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
                   <div className={`absolute -inset-0.5 rounded-xl sm:rounded-2xl p-[1.5px] ${scrolled ? 'bg-gradient-to-br from-primary/40 to-primary/10' : 'bg-gradient-to-br from-white/40 to-white/10'}`}>
                     <div className={`w-full h-full rounded-[10px] sm:rounded-[14px] ${scrolled ? 'bg-muted/50' : 'bg-black/10'} backdrop-blur-sm`} />
                   </div>
-                  <div className={`relative overflow-hidden shadow-2xl transition-all duration-500 rounded-xl sm:rounded-2xl group-hover:scale-105 ${scrolled ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14'}`}>
+                  <div className={`relative overflow-hidden shadow-2xl transition-all duration-500 rounded-xl sm:rounded-2xl group-hover:scale-105 ${scrolled ? 'w-7 h-7 sm:w-10 sm:h-10' : 'w-9 h-9 sm:w-12 sm:h-12 lg:w-14 lg:h-14'}`}>
                     <img src={logoImage} alt="Success Desirous Logo" className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
                   </div>
                 </button>
                 
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                    <h1 className={`font-extrabold tracking-tight font-display truncate drop-shadow-md transition-all duration-500 ${scrolled ? 'text-sm sm:text-base lg:text-lg text-foreground drop-shadow-none' : 'text-base sm:text-xl lg:text-2xl text-white'}`}>
+                    <h1 className={`font-extrabold tracking-tight font-display drop-shadow-md transition-all duration-500 ${scrolled ? 'text-[13px] sm:text-base lg:text-lg text-foreground drop-shadow-none' : 'text-[15px] sm:text-xl lg:text-2xl text-white'}`}>
                       Success Desirous
                     </h1>
                     <Sparkles className={`w-3.5 h-3.5 sm:w-4 sm:h-4 animate-pulse flex-shrink-0 transition-colors duration-500 ${scrolled ? 'text-yellow-500' : 'text-yellow-300 drop-shadow-lg'}`} />
@@ -135,14 +135,14 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
               </div>
 
               {/* Right side */}
-              <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 flex-shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-shrink-0">
                 
                 {/* Search trigger */}
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setCmdOpen(true)}
-                  className={`w-9 h-9 sm:w-auto sm:h-9 sm:px-3 rounded-xl backdrop-blur-md border transition-all duration-300 ${
+                  className={`w-8 h-8 sm:w-auto sm:h-9 sm:px-3 rounded-xl backdrop-blur-md border transition-all duration-300 ${
                     scrolled 
                       ? 'bg-muted/50 hover:bg-muted border-border text-foreground' 
                       : 'bg-white/12 hover:bg-white/20 border-white/20 text-white'
