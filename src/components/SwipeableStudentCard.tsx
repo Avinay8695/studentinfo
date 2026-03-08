@@ -94,6 +94,13 @@ export function SwipeableStudentCard({
   const now = new Date();
   const overduePayments = payments.filter(p => !p.isPaid && (p.year < now.getFullYear() || (p.year === now.getFullYear() && p.month < now.getMonth())));
   const hasOverdue = overduePayments.length > 0;
+  const overdueSeverity = overduePayments.length >= 3 ? 'critical' : overduePayments.length === 2 ? 'warning' : 'mild';
+  const severityColors = {
+    mild: { badge: 'bg-blue-500/90 text-white border-blue-400/30 shadow-blue-500/30', avatar: 'from-blue-500 to-blue-600 shadow-blue-500/20', dot: 'bg-blue-500', pill: 'bg-blue-500/10 text-blue-500 border-blue-500/15' },
+    warning: { badge: 'bg-amber-500/90 text-white border-amber-400/30 shadow-amber-500/30', avatar: 'from-amber-500 to-orange-500 shadow-amber-500/20', dot: 'bg-amber-500', pill: 'bg-amber-500/10 text-amber-500 border-amber-500/15' },
+    critical: { badge: 'bg-rose-500/90 text-white border-rose-400/30 shadow-rose-500/30', avatar: 'from-rose-500 to-red-600 shadow-rose-500/20', dot: 'bg-rose-500', pill: 'bg-rose-500/10 text-rose-500 border-rose-500/15' },
+  };
+  const sColors = hasOverdue ? severityColors[overdueSeverity] : null;
 
   return (
     <div className="relative overflow-hidden rounded-2xl" ref={cardRef}>
@@ -134,7 +141,9 @@ export function SwipeableStudentCard({
       >
         {/* Status indicator line */}
         <div className={`absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl ${
-          hasOverdue ? 'bg-gradient-to-r from-rose-500 via-amber-500 to-transparent' :
+          hasOverdue && overdueSeverity === 'critical' ? 'bg-gradient-to-r from-rose-500 via-red-500 to-transparent' :
+          hasOverdue && overdueSeverity === 'warning' ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-transparent' :
+          hasOverdue ? 'bg-gradient-to-r from-blue-500 via-blue-400 to-transparent' :
           progressPercent === 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
           'bg-gradient-to-r from-primary/50 to-transparent'
         }`} />
@@ -147,13 +156,13 @@ export function SwipeableStudentCard({
               <div className="relative flex-shrink-0">
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg ${
                   hasOverdue 
-                    ? 'bg-gradient-to-br from-rose-500 to-amber-500 shadow-rose-500/20' 
+                    ? `bg-gradient-to-br ${sColors!.avatar}` 
                     : 'bg-gradient-to-br from-primary to-accent shadow-primary/20'
                 }`}>
                   {student.fullName.charAt(0).toUpperCase()}
                 </div>
                 {hasOverdue && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-card flex items-center justify-center">
+                  <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 ${sColors!.dot} rounded-full border-2 border-card flex items-center justify-center`}>
                     <AlertTriangle className="w-2 h-2 text-white" />
                   </div>
                 )}
@@ -163,7 +172,7 @@ export function SwipeableStudentCard({
                 <div className="flex items-center gap-1.5">
                   <p className="font-bold text-card-foreground text-sm truncate">{student.fullName}</p>
                   {hasOverdue && (
-                    <Badge variant="destructive" className="text-[9px] px-2 py-0.5 h-4.5 gap-1 flex-shrink-0 font-extrabold animate-pulse shadow-sm shadow-destructive/30 border border-destructive/20">
+                    <Badge className={`text-[9px] px-2 py-0.5 h-4.5 gap-1 flex-shrink-0 font-extrabold animate-pulse shadow-sm border ${sColors!.badge}`}>
                       <AlertTriangle className="w-2.5 h-2.5" />
                       {overduePayments.length} overdue
                     </Badge>
@@ -220,7 +229,7 @@ export function SwipeableStudentCard({
             {hasOverdue && (
               <div className="flex flex-wrap gap-1">
                 {overduePayments.slice(0, 5).map((p, i) => (
-                  <span key={i} className="text-[9px] px-2 py-0.5 rounded-lg font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/15">
+                  <span key={i} className={`text-[9px] px-2 py-0.5 rounded-lg font-semibold border ${sColors!.pill}`}>
                     {MONTH_NAMES[p.month]}'{p.year.toString().slice(2)}
                   </span>
                 ))}
