@@ -4,7 +4,7 @@ import { format, formatDistanceToNow, isToday, isYesterday, isThisWeek, parseISO
 import { 
   Plus, Pencil, Trash2, LogIn, LogOut, Filter, User, GraduationCap, CreditCard,
   ChevronRight, Calendar, Clock, ArrowLeft, Search, Download, FileSpreadsheet,
-  FileJson, LayoutList, Activity, ChevronLeft, X, Shield
+  FileJson, LayoutList, Activity, ChevronLeft, X, Shield, Globe, Monitor, RotateCcw, Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
