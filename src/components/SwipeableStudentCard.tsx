@@ -227,7 +227,7 @@ export function SwipeableStudentCard({
             {hasOverdue && (
               <div className="flex flex-wrap gap-1">
                 {overduePayments.slice(0, 5).map((p, i) => (
-                  <span key={i} className="text-[9px] px-2 py-0.5 rounded-lg font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/15">
+                  <span key={i} className={`text-[9px] px-2 py-0.5 rounded-lg font-semibold border ${sColors!.pill}`}>
                     {MONTH_NAMES[p.month]}'{p.year.toString().slice(2)}
                   </span>
                 ))}
