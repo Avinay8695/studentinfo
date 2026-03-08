@@ -200,6 +200,7 @@ export default function AuditLogs() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'timeline' | 'table'>('timeline');
   const [currentPage, setCurrentPage] = useState(1);
+  const [restoring, setRestoring] = useState(false);
 
   const { data: allLogs = [], isLoading } = useQuery({
     queryKey: ['audit-logs'],
