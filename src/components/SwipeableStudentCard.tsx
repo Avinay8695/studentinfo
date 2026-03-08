@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from 'react';
 import { Student } from '@/types/student';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, GraduationCap, BarChart3, CreditCard, Phone, AlertTriangle, ChevronLeft } from 'lucide-react';
+import { Pencil, Trash2, GraduationCap, BarChart3, CreditCard, Phone, AlertTriangle, ChevronLeft, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { hapticLight, hapticMedium, hapticHeavy } from '@/utils/haptics';
 
@@ -30,9 +30,11 @@ export function SwipeableStudentCard({
 }: SwipeableStudentCardProps) {
   const [swipeX, setSwipeX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const startX = useRef(0);
   const startY = useRef(0);
   const isHorizontal = useRef<boolean | null>(null);
+  const hasMoved = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const SWIPE_THRESHOLD = 70;
@@ -42,6 +44,7 @@ export function SwipeableStudentCard({
     startX.current = e.touches[0].clientX;
     startY.current = e.touches[0].clientY;
     isHorizontal.current = null;
+    hasMoved.current = false;
     setIsSwiping(true);
   }, []);
 
@@ -49,6 +52,9 @@ export function SwipeableStudentCard({
     if (!isSwiping) return;
     const diffX = e.touches[0].clientX - startX.current;
     const diffY = e.touches[0].clientY - startY.current;
+    if (Math.abs(diffX) > 5 || Math.abs(diffY) > 5) {
+      hasMoved.current = true;
+    }
     if (isHorizontal.current === null && (Math.abs(diffX) > 5 || Math.abs(diffY) > 5)) {
       isHorizontal.current = Math.abs(diffX) > Math.abs(diffY);
     }
@@ -69,6 +75,16 @@ export function SwipeableStudentCard({
   }, [swipeX, MAX_SWIPE]);
 
   const closeSwipe = useCallback(() => setSwipeX(0), []);
+
+  const handleCardTap = useCallback(() => {
+    if (hasMoved.current) return;
+    if (swipeX !== 0) {
+      setSwipeX(0);
+      return;
+    }
+    hapticLight();
+    setIsExpanded(prev => !prev);
+  }, [swipeX]);
 
   const payments = student.monthlyPayments || [];
   const paidCount = payments.filter(p => p.isPaid).length;
@@ -109,11 +125,12 @@ export function SwipeableStudentCard({
 
       {/* Foreground card */}
       <div
-        className={`relative z-10 bg-card border border-border/50 rounded-2xl p-4 ${!isSwiping ? 'transition-transform duration-300 ease-out' : ''}`}
+        className={`relative z-10 bg-card border border-border/50 rounded-2xl ${!isSwiping ? 'transition-transform duration-300 ease-out' : ''}`}
         style={{ transform: `translateX(${swipeX}px)` }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onClick={handleCardTap}
       >
         {/* Status indicator line */}
         <div className={`absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl ${
@@ -122,135 +139,149 @@ export function SwipeableStudentCard({
           'bg-gradient-to-r from-primary/50 to-transparent'
         }`} />
 
-        {/* Top row */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {/* Avatar with status ring */}
-            <div className="relative flex-shrink-0">
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg ${
-                hasOverdue 
-                  ? 'bg-gradient-to-br from-rose-500 to-amber-500 shadow-rose-500/20' 
-                  : 'bg-gradient-to-br from-primary to-accent shadow-primary/20'
-              }`}>
-                {student.fullName.charAt(0).toUpperCase()}
+        {/* Collapsed header - always visible */}
+        <div className="p-4 pb-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              {/* Avatar */}
+              <div className="relative flex-shrink-0">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg ${
+                  hasOverdue 
+                    ? 'bg-gradient-to-br from-rose-500 to-amber-500 shadow-rose-500/20' 
+                    : 'bg-gradient-to-br from-primary to-accent shadow-primary/20'
+                }`}>
+                  {student.fullName.charAt(0).toUpperCase()}
+                </div>
+                {hasOverdue && (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-card flex items-center justify-center">
+                    <AlertTriangle className="w-2 h-2 text-white" />
+                  </div>
+                )}
               </div>
-              {hasOverdue && (
-                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-card flex items-center justify-center">
-                  <AlertTriangle className="w-2 h-2 text-white" />
+              
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="font-bold text-card-foreground text-sm truncate">{student.fullName}</p>
+                  {hasOverdue && (
+                    <Badge variant="destructive" className="text-[8px] px-1.5 py-0 h-3.5 gap-0.5 flex-shrink-0 font-bold">
+                      {overduePayments.length}mo
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <GraduationCap className="w-3 h-3 text-primary flex-shrink-0" />
+                  <span className="text-[11px] text-muted-foreground truncate">{student.course}</span>
+                  {student.batch && (
+                    <>
+                      <span className="text-muted-foreground/30">•</span>
+                      <span className="text-[11px] text-muted-foreground">{student.batch}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-[10px] font-bold text-muted-foreground/50 bg-muted/50 px-2 py-0.5 rounded-lg">
+                #{String(index + 1).padStart(2, '0')}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+            </div>
+          </div>
+        </div>
+
+        {/* Expandable content */}
+        <div className={`overflow-hidden transition-all duration-300 ease-out ${isExpanded ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="px-4 pb-4 space-y-3">
+            {/* Overdue month pills */}
+            {hasOverdue && (
+              <div className="flex flex-wrap gap-1">
+                {overduePayments.slice(0, 5).map((p, i) => (
+                  <span key={i} className="text-[9px] px-2 py-0.5 rounded-lg font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/15">
+                    {MONTH_NAMES[p.month]}'{p.year.toString().slice(2)}
+                  </span>
+                ))}
+                {overduePayments.length > 5 && (
+                  <span className="text-[9px] px-2 py-0.5 rounded-lg bg-muted text-muted-foreground font-semibold border border-border/50">
+                    +{overduePayments.length - 5}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Fees + Progress row */}
+            <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-muted/30 border border-border/30">
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Total Fees</p>
+                <p className="text-sm font-bold text-card-foreground">{formatCurrency(student.feesAmount)}</p>
+              </div>
+              {totalMonths > 0 && (
+                <div className="flex-1 max-w-[140px]">
+                  <div className="flex items-center justify-between text-[10px] mb-1">
+                    <span className="text-muted-foreground font-medium">{paidCount}/{totalMonths} paid</span>
+                    <span className={`font-bold ${
+                      progressPercent === 100 ? 'text-emerald-500' : progressPercent > 50 ? 'text-primary' : 'text-amber-500'
+                    }`}>
+                      {Math.round(progressPercent)}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        progressPercent === 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-primary to-accent'
+                      }`}
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
-            
-            <div className="min-w-0">
+
+            {/* Mobile number */}
+            {student.mobile && (
               <div className="flex items-center gap-1.5">
-                <p className="font-bold text-card-foreground text-sm truncate">{student.fullName}</p>
-                {hasOverdue && (
-                  <Badge variant="destructive" className="text-[8px] px-1.5 py-0 h-3.5 gap-0.5 flex-shrink-0 font-bold">
-                    {overduePayments.length}mo
-                  </Badge>
-                )}
+                <Phone className="w-3 h-3 text-muted-foreground" />
+                <a 
+                  href={`tel:${student.mobile}`} 
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {student.mobile}
+                </a>
               </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <GraduationCap className="w-3 h-3 text-primary flex-shrink-0" />
-                <span className="text-[11px] text-muted-foreground truncate">{student.course}</span>
-                {student.batch && (
-                  <>
-                    <span className="text-muted-foreground/30">•</span>
-                    <span className="text-[11px] text-muted-foreground">{student.batch}</span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <span className="text-[10px] font-bold text-muted-foreground/50 bg-muted/50 px-2 py-0.5 rounded-lg flex-shrink-0">
-            #{String(index + 1).padStart(2, '0')}
-          </span>
-        </div>
-
-        {/* Overdue month pills */}
-        {hasOverdue && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {overduePayments.slice(0, 5).map((p, i) => (
-              <span key={i} className="text-[9px] px-2 py-0.5 rounded-lg font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/15">
-                {MONTH_NAMES[p.month]}'{p.year.toString().slice(2)}
-              </span>
-            ))}
-            {overduePayments.length > 5 && (
-              <span className="text-[9px] px-2 py-0.5 rounded-lg bg-muted text-muted-foreground font-semibold border border-border/50">
-                +{overduePayments.length - 5}
-              </span>
             )}
-          </div>
-        )}
 
-        {/* Fees + Progress row */}
-        <div className="flex items-center justify-between gap-3 mb-3 p-2.5 rounded-xl bg-muted/30 border border-border/30">
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Total Fees</p>
-            <p className="text-sm font-bold text-card-foreground">{formatCurrency(student.feesAmount)}</p>
-          </div>
-          {totalMonths > 0 && (
-            <div className="flex-1 max-w-[140px]">
-              <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-muted-foreground font-medium">{paidCount}/{totalMonths} paid</span>
-                <span className={`font-bold ${
-                  progressPercent === 100 ? 'text-emerald-500' : progressPercent > 50 ? 'text-primary' : 'text-amber-500'
-                }`}>
-                  {Math.round(progressPercent)}%
-                </span>
-              </div>
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    progressPercent === 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-primary to-accent'
-                  }`}
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
+            {/* Action buttons */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); hapticLight(); onViewAnalytics(student); }}
+                className="flex-1 min-h-[42px] text-xs gap-1.5 rounded-xl border-border/50 bg-muted/30 hover:bg-muted/60"
+              >
+                <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                Analytics
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); hapticLight(); onViewPayments(student); }}
+                className={`flex-1 min-h-[42px] text-xs gap-1.5 rounded-xl border-border/50 ${
+                  hasOverdue 
+                    ? 'bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20 text-rose-500' 
+                    : 'bg-muted/30 hover:bg-muted/60'
+                }`}
+              >
+                <CreditCard className={`w-3.5 h-3.5 ${hasOverdue ? 'text-rose-500' : 'text-accent'}`} />
+                Payments
+              </Button>
             </div>
-          )}
-        </div>
-
-        {/* Mobile number */}
-        {student.mobile && (
-          <div className="flex items-center gap-1.5 mb-3">
-            <Phone className="w-3 h-3 text-muted-foreground" />
-            <a href={`tel:${student.mobile}`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
-              {student.mobile}
-            </a>
           </div>
-        )}
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => { hapticLight(); onViewAnalytics(student); }}
-            className="flex-1 min-h-[42px] text-xs gap-1.5 rounded-xl border-border/50 bg-muted/30 hover:bg-muted/60"
-          >
-            <BarChart3 className="w-3.5 h-3.5 text-primary" />
-            Analytics
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => { hapticLight(); onViewPayments(student); }}
-            className={`flex-1 min-h-[42px] text-xs gap-1.5 rounded-xl border-border/50 ${
-              hasOverdue 
-                ? 'bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20 text-rose-500' 
-                : 'bg-muted/30 hover:bg-muted/60'
-            }`}
-          >
-            <CreditCard className={`w-3.5 h-3.5 ${hasOverdue ? 'text-rose-500' : 'text-accent'}`} />
-            Payments
-          </Button>
         </div>
 
-        {/* Swipe hint */}
-        {swipeX === 0 && (
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-20">
+        {/* Swipe hint - only when collapsed */}
+        {swipeX === 0 && !isExpanded && (
+          <div className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-20">
             <ChevronLeft className="w-3 h-3 text-muted-foreground animate-pulse" />
           </div>
         )}
