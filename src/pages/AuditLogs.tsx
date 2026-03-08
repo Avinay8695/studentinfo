@@ -217,11 +217,23 @@ export default function AuditLogs() {
     enabled: isAdmin,
   });
 
+  // Unique users for filter
+  const uniqueUsers = useMemo(() => {
+    const users = new Map<string, string>();
+    allLogs.forEach(l => {
+      if (l.performed_by && !users.has(l.performed_by)) {
+        users.set(l.performed_by, l.performed_by_name);
+      }
+    });
+    return Array.from(users.entries()).map(([id, name]) => ({ id, name }));
+  }, [allLogs]);
+
   // Client-side filtering
   const filteredLogs = useMemo(() => {
     let logs = allLogs;
     if (actionFilter !== 'all') logs = logs.filter(l => l.action_type === actionFilter);
     if (entityFilter !== 'all') logs = logs.filter(l => l.entity_type === entityFilter);
+    if (userFilter !== 'all') logs = logs.filter(l => l.performed_by === userFilter);
     if (dateFilter !== 'all') {
       const now = new Date();
       logs = logs.filter(l => {
@@ -245,7 +257,7 @@ export default function AuditLogs() {
       );
     }
     return logs;
-  }, [allLogs, actionFilter, entityFilter, dateFilter, searchQuery]);
+  }, [allLogs, actionFilter, entityFilter, userFilter, dateFilter, searchQuery]);
 
   // Pagination
   const totalPages = Math.ceil(filteredLogs.length / ITEMS_PER_PAGE);
