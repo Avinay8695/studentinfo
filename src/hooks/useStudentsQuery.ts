@@ -91,11 +91,12 @@ function toStudent(dbStudent: DbStudent, payments: DbPayment[]): Student {
   };
 }
 
-// Fetch students with their payments
+// Fetch active students (not soft-deleted)
 async function fetchStudentsFromDB(): Promise<Student[]> {
   const { data: studentsData, error: studentsError } = await supabase
     .from('students')
     .select('*')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   if (studentsError) throw studentsError;
@@ -111,6 +112,33 @@ async function fetchStudentsFromDB(): Promise<Student[]> {
       p => p.student_id === student.id
     );
     return toStudent(student, studentPayments);
+  });
+}
+
+// Fetch soft-deleted students (trash)
+async function fetchTrashedStudentsFromDB(): Promise<(Student & { deletedAt: string })[]> {
+  const { data: studentsData, error: studentsError } = await supabase
+    .from('students')
+    .select('*')
+    .not('deleted_at', 'is', null)
+    .order('deleted_at' as any, { ascending: false });
+
+  if (studentsError) throw studentsError;
+
+  const { data: paymentsData, error: paymentsError } = await supabase
+    .from('monthly_payments')
+    .select('*');
+
+  if (paymentsError) throw paymentsError;
+
+  return (studentsData as DbStudent[]).map(student => {
+    const studentPayments = (paymentsData as DbPayment[]).filter(
+      p => p.student_id === student.id
+    );
+    return {
+      ...toStudent(student, studentPayments),
+      deletedAt: student.deleted_at!,
+    };
   });
 }
 
