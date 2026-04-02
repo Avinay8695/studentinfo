@@ -440,6 +440,16 @@ export function useStudentsQuery() {
     return true;
   }, [deleteMutation, students]);
 
+  const restoreStudent = useCallback(async (id: string) => {
+    await restoreMutation.mutateAsync(id);
+    return true;
+  }, [restoreMutation]);
+
+  const permanentDeleteStudent = useCallback(async (id: string) => {
+    await permanentDeleteMutation.mutateAsync(id);
+    return true;
+  }, [permanentDeleteMutation]);
+
   const updatePaymentStatus = useCallback(async (studentId: string, paymentIndex: number, isPaid: boolean, studentName?: string) => {
     await updatePaymentMutation.mutateAsync({ studentId, paymentIndex, isPaid, studentName });
   }, [updatePaymentMutation]);
