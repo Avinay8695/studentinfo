@@ -134,6 +134,7 @@ export type Database = {
           batch: string | null
           course: string
           created_at: string
+          deleted_at: string | null
           duration_months: number
           enrollment_date: string | null
           fees_amount: number
@@ -148,6 +149,7 @@ export type Database = {
           batch?: string | null
           course: string
           created_at?: string
+          deleted_at?: string | null
           duration_months?: number
           enrollment_date?: string | null
           fees_amount?: number
@@ -162,6 +164,7 @@ export type Database = {
           batch?: string | null
           course?: string
           created_at?: string
+          deleted_at?: string | null
           duration_months?: number
           enrollment_date?: string | null
           fees_amount?: number
