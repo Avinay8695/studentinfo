@@ -231,9 +231,8 @@ async function updateStudentInDB({ id, data, previousData }: { id: string; data:
   return { id };
 }
 
-// Delete student mutation
-async function deleteStudentFromDB({ id, studentData }: { id: string; studentData?: Student }) {
-  // Log activity before deletion
+// Soft delete student mutation
+async function softDeleteStudentInDB({ id, studentData }: { id: string; studentData?: Student }) {
   if (studentData) {
     await logStudentDelete(id, {
       full_name: studentData.fullName,
@@ -243,6 +242,31 @@ async function deleteStudentFromDB({ id, studentData }: { id: string; studentDat
     });
   }
 
+  const { error } = await supabase
+    .from('students')
+    .update({ deleted_at: new Date().toISOString() } as any)
+    .eq('id', id);
+
+  if (error) throw error;
+  return { id, studentName: studentData?.fullName || 'Student' };
+}
+
+// Restore student from trash
+async function restoreStudentInDB(id: string) {
+  const { error } = await supabase
+    .from('students')
+    .update({ deleted_at: null } as any)
+    .eq('id', id);
+
+  if (error) throw error;
+  return { id };
+}
+
+// Permanently delete student
+async function permanentDeleteStudentFromDB(id: string) {
+  // Delete payments first (cascade may handle this, but be explicit)
+  await supabase.from('monthly_payments').delete().eq('student_id', id);
+  
   const { error } = await supabase
     .from('students')
     .delete()
