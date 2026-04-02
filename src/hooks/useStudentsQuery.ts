@@ -504,6 +504,8 @@ export function useStudentsQuery() {
     addStudent,
     updateStudent,
     deleteStudent,
+    restoreStudent,
+    permanentDeleteStudent,
     updatePaymentStatus,
     startEditing,
     cancelEditing,
@@ -511,5 +513,43 @@ export function useStudentsQuery() {
     isAdding: addMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+  };
+}
+
+// Separate hook for trash page
+export function useTrashedStudents() {
+  const queryClient = useQueryClient();
+
+  const { data: trashedStudents = [], isLoading } = useQuery({
+    queryKey: ['trashed-students'],
+    queryFn: fetchTrashedStudentsFromDB,
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: restoreStudentInDB,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      queryClient.invalidateQueries({ queryKey: ['trashed-students'] });
+      toast.success('Student restored successfully');
+    },
+    onError: () => toast.error('Failed to restore student'),
+  });
+
+  const permanentDeleteMutation = useMutation({
+    mutationFn: permanentDeleteStudentFromDB,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trashed-students'] });
+      toast.success('Student permanently deleted');
+    },
+    onError: () => toast.error('Failed to permanently delete'),
+  });
+
+  return {
+    trashedStudents,
+    isLoading,
+    restoreStudent: (id: string) => restoreMutation.mutateAsync(id),
+    permanentDeleteStudent: (id: string) => permanentDeleteMutation.mutateAsync(id),
+    isRestoring: restoreMutation.isPending,
+    isDeleting: permanentDeleteMutation.isPending,
   };
 }
