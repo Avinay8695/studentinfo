@@ -47,6 +47,7 @@ interface DbStudent {
   enrollment_date: string | null;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 }
 
 interface DbPayment {
