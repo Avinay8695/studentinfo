@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Sparkles, LogOut, User, Shield, Users, History, GraduationCap, Search, Clock } from 'lucide-react';
+import { Sparkles, LogOut, User, Shield, Users, History, GraduationCap, Search, Clock, Trash2 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { Student } from '@/types/student';
 import logoImage from '@/assets/logo-success-desirous.jpg';
