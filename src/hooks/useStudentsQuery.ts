@@ -47,6 +47,7 @@ interface DbStudent {
   enrollment_date: string | null;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 }
 
 interface DbPayment {
@@ -90,11 +91,12 @@ function toStudent(dbStudent: DbStudent, payments: DbPayment[]): Student {
   };
 }
 
-// Fetch students with their payments
+// Fetch active students (not soft-deleted)
 async function fetchStudentsFromDB(): Promise<Student[]> {
   const { data: studentsData, error: studentsError } = await supabase
     .from('students')
     .select('*')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   if (studentsError) throw studentsError;
@@ -110,6 +112,33 @@ async function fetchStudentsFromDB(): Promise<Student[]> {
       p => p.student_id === student.id
     );
     return toStudent(student, studentPayments);
+  });
+}
+
+// Fetch soft-deleted students (trash)
+async function fetchTrashedStudentsFromDB(): Promise<(Student & { deletedAt: string })[]> {
+  const { data: studentsData, error: studentsError } = await supabase
+    .from('students')
+    .select('*')
+    .not('deleted_at', 'is', null)
+    .order('deleted_at' as any, { ascending: false });
+
+  if (studentsError) throw studentsError;
+
+  const { data: paymentsData, error: paymentsError } = await supabase
+    .from('monthly_payments')
+    .select('*');
+
+  if (paymentsError) throw paymentsError;
+
+  return (studentsData as DbStudent[]).map(student => {
+    const studentPayments = (paymentsData as DbPayment[]).filter(
+      p => p.student_id === student.id
+    );
+    return {
+      ...toStudent(student, studentPayments),
+      deletedAt: student.deleted_at!,
+    };
   });
 }
 
@@ -202,9 +231,8 @@ async function updateStudentInDB({ id, data, previousData }: { id: string; data:
   return { id };
 }
 
-// Delete student mutation
-async function deleteStudentFromDB({ id, studentData }: { id: string; studentData?: Student }) {
-  // Log activity before deletion
+// Soft delete student mutation
+async function softDeleteStudentInDB({ id, studentData }: { id: string; studentData?: Student }) {
   if (studentData) {
     await logStudentDelete(id, {
       full_name: studentData.fullName,
@@ -214,6 +242,31 @@ async function deleteStudentFromDB({ id, studentData }: { id: string; studentDat
     });
   }
 
+  const { error } = await supabase
+    .from('students')
+    .update({ deleted_at: new Date().toISOString() } as any)
+    .eq('id', id);
+
+  if (error) throw error;
+  return { id, studentName: studentData?.fullName || 'Student' };
+}
+
+// Restore student from trash
+async function restoreStudentInDB(id: string) {
+  const { error } = await supabase
+    .from('students')
+    .update({ deleted_at: null } as any)
+    .eq('id', id);
+
+  if (error) throw error;
+  return { id };
+}
+
+// Permanently delete student
+async function permanentDeleteStudentFromDB(id: string) {
+  // Delete payments first (cascade may handle this, but be explicit)
+  await supabase.from('monthly_payments').delete().eq('student_id', id);
+  
   const { error } = await supabase
     .from('students')
     .delete()
@@ -309,16 +362,52 @@ export function useStudentsQuery() {
     },
   });
 
-  // Delete student mutation
+  // Soft delete student mutation
   const deleteMutation = useMutation({
-    mutationFn: deleteStudentFromDB,
-    onSuccess: () => {
+    mutationFn: softDeleteStudentInDB,
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
-      toast.success('Student deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['trashed-students'] });
+      toast.success(`"${data.studentName}" moved to trash`, {
+        action: {
+          label: 'Undo',
+          onClick: () => {
+            restoreMutation.mutate(data.id);
+          },
+        },
+        duration: 5000,
+      });
     },
     onError: (error) => {
       console.error('Error deleting student:', error);
       toast.error('Failed to delete student');
+    },
+  });
+
+  // Restore student mutation
+  const restoreMutation = useMutation({
+    mutationFn: restoreStudentInDB,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      queryClient.invalidateQueries({ queryKey: ['trashed-students'] });
+      toast.success('Student restored successfully');
+    },
+    onError: (error) => {
+      console.error('Error restoring student:', error);
+      toast.error('Failed to restore student');
+    },
+  });
+
+  // Permanent delete mutation
+  const permanentDeleteMutation = useMutation({
+    mutationFn: permanentDeleteStudentFromDB,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trashed-students'] });
+      toast.success('Student permanently deleted');
+    },
+    onError: (error) => {
+      console.error('Error permanently deleting student:', error);
+      toast.error('Failed to permanently delete student');
     },
   });
 
@@ -350,6 +439,16 @@ export function useStudentsQuery() {
     await deleteMutation.mutateAsync({ id, studentData });
     return true;
   }, [deleteMutation, students]);
+
+  const restoreStudent = useCallback(async (id: string) => {
+    await restoreMutation.mutateAsync(id);
+    return true;
+  }, [restoreMutation]);
+
+  const permanentDeleteStudent = useCallback(async (id: string) => {
+    await permanentDeleteMutation.mutateAsync(id);
+    return true;
+  }, [permanentDeleteMutation]);
 
   const updatePaymentStatus = useCallback(async (studentId: string, paymentIndex: number, isPaid: boolean, studentName?: string) => {
     await updatePaymentMutation.mutateAsync({ studentId, paymentIndex, isPaid, studentName });
@@ -405,6 +504,8 @@ export function useStudentsQuery() {
     addStudent,
     updateStudent,
     deleteStudent,
+    restoreStudent,
+    permanentDeleteStudent,
     updatePaymentStatus,
     startEditing,
     cancelEditing,
@@ -412,5 +513,43 @@ export function useStudentsQuery() {
     isAdding: addMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+  };
+}
+
+// Separate hook for trash page
+export function useTrashedStudents() {
+  const queryClient = useQueryClient();
+
+  const { data: trashedStudents = [], isLoading } = useQuery({
+    queryKey: ['trashed-students'],
+    queryFn: fetchTrashedStudentsFromDB,
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: restoreStudentInDB,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      queryClient.invalidateQueries({ queryKey: ['trashed-students'] });
+      toast.success('Student restored successfully');
+    },
+    onError: () => toast.error('Failed to restore student'),
+  });
+
+  const permanentDeleteMutation = useMutation({
+    mutationFn: permanentDeleteStudentFromDB,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trashed-students'] });
+      toast.success('Student permanently deleted');
+    },
+    onError: () => toast.error('Failed to permanently delete'),
+  });
+
+  return {
+    trashedStudents,
+    isLoading,
+    restoreStudent: (id: string) => restoreMutation.mutateAsync(id),
+    permanentDeleteStudent: (id: string) => permanentDeleteMutation.mutateAsync(id),
+    isRestoring: restoreMutation.isPending,
+    isDeleting: permanentDeleteMutation.isPending,
   };
 }

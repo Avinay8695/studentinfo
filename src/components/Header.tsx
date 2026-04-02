@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Sparkles, LogOut, User, Shield, Users, History, GraduationCap, Search, Clock } from 'lucide-react';
+import { Sparkles, LogOut, User, Shield, Users, History, GraduationCap, Search, Clock, Trash2 } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { Student } from '@/types/student';
 import logoImage from '@/assets/logo-success-desirous.jpg';
@@ -30,6 +30,7 @@ const PAGE_NAMES: Record<string, string> = {
   '/': 'Dashboard',
   '/users': 'User Management',
   '/audit-logs': 'Audit Logs',
+  '/trash': 'Trash',
 };
 
 export function Header({ students = [], onViewPayments, onStudentSelect }: HeaderProps) {
@@ -263,6 +264,13 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
                           >
                             <History className="w-4 h-4 mr-2 text-primary" />
                             Activity History
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => navigate('/trash')}
+                            className="cursor-pointer min-h-[44px] rounded-lg mx-1 my-0.5"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2 text-destructive" />
+                            Trash
                           </DropdownMenuItem>
                           <DropdownMenuSeparator className="mx-2" />
                         </>

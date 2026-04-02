@@ -15,6 +15,7 @@ import PendingApproval from "./pages/PendingApproval";
 import Banned from "./pages/Banned";
 import ResetPassword from "./pages/ResetPassword";
 import Terms from "./pages/Terms";
+import Trash from "./pages/Trash";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,11 @@ const App = () => (
             <Route path="/audit-logs" element={
               <ProtectedRoute requireAdmin>
                 <AuditLogs />
+              </ProtectedRoute>
+            } />
+            <Route path="/trash" element={
+              <ProtectedRoute requireAdmin>
+                <Trash />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
