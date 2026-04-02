@@ -362,16 +362,52 @@ export function useStudentsQuery() {
     },
   });
 
-  // Delete student mutation
+  // Soft delete student mutation
   const deleteMutation = useMutation({
-    mutationFn: deleteStudentFromDB,
-    onSuccess: () => {
+    mutationFn: softDeleteStudentInDB,
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
-      toast.success('Student deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['trashed-students'] });
+      toast.success(`"${data.studentName}" moved to trash`, {
+        action: {
+          label: 'Undo',
+          onClick: () => {
+            restoreMutation.mutate(data.id);
+          },
+        },
+        duration: 5000,
+      });
     },
     onError: (error) => {
       console.error('Error deleting student:', error);
       toast.error('Failed to delete student');
+    },
+  });
+
+  // Restore student mutation
+  const restoreMutation = useMutation({
+    mutationFn: restoreStudentInDB,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      queryClient.invalidateQueries({ queryKey: ['trashed-students'] });
+      toast.success('Student restored successfully');
+    },
+    onError: (error) => {
+      console.error('Error restoring student:', error);
+      toast.error('Failed to restore student');
+    },
+  });
+
+  // Permanent delete mutation
+  const permanentDeleteMutation = useMutation({
+    mutationFn: permanentDeleteStudentFromDB,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trashed-students'] });
+      toast.success('Student permanently deleted');
+    },
+    onError: (error) => {
+      console.error('Error permanently deleting student:', error);
+      toast.error('Failed to permanently delete student');
     },
   });
 
