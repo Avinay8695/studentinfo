@@ -264,6 +264,13 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
                             <History className="w-4 h-4 mr-2 text-primary" />
                             Activity History
                           </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => navigate('/trash')}
+                            className="cursor-pointer min-h-[44px] rounded-lg mx-1 my-0.5"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2 text-destructive" />
+                            Trash
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator className="mx-2" />
                         </>
                       )}
