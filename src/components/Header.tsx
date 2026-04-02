@@ -30,6 +30,7 @@ const PAGE_NAMES: Record<string, string> = {
   '/': 'Dashboard',
   '/users': 'User Management',
   '/audit-logs': 'Audit Logs',
+  '/trash': 'Trash',
 };
 
 export function Header({ students = [], onViewPayments, onStudentSelect }: HeaderProps) {
