@@ -428,6 +428,13 @@ export function useStudentsQuery() {
     return true;
   }, [addMutation]);
 
+  const bulkAddStudents = useCallback(async (studentsData: (Omit<Student, 'id' | 'createdAt' | 'updatedAt'> & { monthlyPayments?: MonthlyPayment[] })[]) => {
+    for (const studentData of studentsData) {
+      await addMutation.mutateAsync(studentData);
+    }
+    return true;
+  }, [addMutation]);
+
   const updateStudent = useCallback(async (id: string, data: Omit<Student, 'id' | 'createdAt' | 'updatedAt'>) => {
     const previousData = students.find(s => s.id === id);
     await updateMutation.mutateAsync({ id, data, previousData });
@@ -502,6 +509,7 @@ export function useStudentsQuery() {
     setFeesFilter,
     editingStudent,
     addStudent,
+    bulkAddStudents,
     updateStudent,
     deleteStudent,
     restoreStudent,

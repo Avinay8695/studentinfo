@@ -13,11 +13,12 @@ import { StudentAnalytics } from '@/components/StudentAnalytics';
 import { ExportButton } from '@/components/ExportButton';
 import { DashboardSummary } from '@/components/DashboardSummary';
 import { DateRangeAnalytics } from '@/components/DateRangeAnalytics';
+import { BulkImportStudents } from '@/components/BulkImportStudents';
 
 import { SectionNav, defaultSections } from '@/components/SectionNav';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Student } from '@/types/student';
-import { UserPlus, ChevronDown, ChevronUp } from 'lucide-react';
+import { UserPlus, ChevronDown, ChevronUp, FileSpreadsheet } from 'lucide-react';
 import { StudentTableSkeleton } from '@/components/skeletons/StudentTableSkeleton';
 import { StatsCardsSkeleton } from '@/components/skeletons/StatsCardsSkeleton';
 import { StudentFormSkeleton } from '@/components/skeletons/StudentFormSkeleton';
@@ -47,6 +48,7 @@ const Index = () => {
     isAdding,
     isUpdating,
     refetch,
+    bulkAddStudents,
   } = useStudentsQuery();
 
   const handleRefresh = useCallback(async () => {
@@ -62,6 +64,7 @@ const Index = () => {
   const [isAnalyticsDialogOpen, setIsAnalyticsDialogOpen] = useState(false);
   const [analyticsStudentId, setAnalyticsStudentId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
 
   // Open form when editing
   useEffect(() => {
@@ -151,41 +154,52 @@ const Index = () => {
         </div>
 
         {/* Student Form - Collapsible */}
-        <div id="add-student" className="mb-8">
-          <Collapsible open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <CollapsibleTrigger asChild>
-              <Button
-                variant={isFormOpen ? "secondary" : "default"}
-                className={`w-full py-6 text-lg font-semibold transition-all duration-500 ${
-                  isFormOpen 
-                    ? 'bg-muted hover:bg-muted/80 text-muted-foreground border border-border' 
-                    : 'btn-glow bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] hover:bg-[length:100%_100%] transition-all duration-700'
-                }`}
-              >
-                <UserPlus className="w-5 h-5 mr-2" />
-                {editingStudent ? 'Edit Student' : 'Add New Student'}
-                {isFormOpen ? (
-                  <ChevronUp className="w-5 h-5 ml-2" />
+        <div id="add-student" className="mb-8 space-y-3">
+          <div className="flex gap-2">
+            <Collapsible open={isFormOpen} onOpenChange={setIsFormOpen} className="flex-1">
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant={isFormOpen ? "secondary" : "default"}
+                  className={`w-full py-6 text-lg font-semibold transition-all duration-500 ${
+                    isFormOpen 
+                      ? 'bg-muted hover:bg-muted/80 text-muted-foreground border border-border' 
+                      : 'btn-glow bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] hover:bg-[length:100%_100%] transition-all duration-700'
+                  }`}
+                >
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  {editingStudent ? 'Edit Student' : 'Add New Student'}
+                  {isFormOpen ? (
+                    <ChevronUp className="w-5 h-5 ml-2" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 ml-2" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-4 animate-fade-in">
+                {studentsLoading ? (
+                  <StudentFormSkeleton />
                 ) : (
-                  <ChevronDown className="w-5 h-5 ml-2" />
+                  <StudentFormNew
+                    editingStudent={editingStudent}
+                    onSubmit={handleAddStudent}
+                    onUpdate={handleUpdateStudent}
+                    onCancel={handleCancelEdit}
+                    isSubmitting={isAdding || isUpdating}
+                    isAdmin={isAdmin}
+                  />
                 )}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4 animate-fade-in">
-              {studentsLoading ? (
-                <StudentFormSkeleton />
-              ) : (
-                <StudentFormNew
-                  editingStudent={editingStudent}
-                  onSubmit={handleAddStudent}
-                  onUpdate={handleUpdateStudent}
-                  onCancel={handleCancelEdit}
-                  isSubmitting={isAdding || isUpdating}
-                  isAdmin={isAdmin}
-                />
-              )}
-            </CollapsibleContent>
-          </Collapsible>
+              </CollapsibleContent>
+            </Collapsible>
+            <Button
+              variant="outline"
+              className="py-6 px-4 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all"
+              onClick={() => setIsBulkImportOpen(true)}
+              title="Bulk Import"
+            >
+              <FileSpreadsheet className="w-5 h-5 text-primary" />
+              <span className="hidden sm:inline ml-2 font-medium">Bulk Import</span>
+            </Button>
+          </div>
         </div>
 
 
@@ -233,6 +247,13 @@ const Index = () => {
         student={selectedStudentForAnalytics}
         isOpen={isAnalyticsDialogOpen}
         onClose={handleCloseAnalyticsDialog}
+      />
+
+      {/* Bulk Import Dialog */}
+      <BulkImportStudents
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        onImport={bulkAddStudents}
       />
 
       {/* Mobile Bottom Navigation */}
