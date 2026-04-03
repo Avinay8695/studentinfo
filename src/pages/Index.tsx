@@ -18,7 +18,7 @@ import { BulkImportStudents } from '@/components/BulkImportStudents';
 import { SectionNav, defaultSections } from '@/components/SectionNav';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Student } from '@/types/student';
-import { UserPlus, ChevronDown, ChevronUp } from 'lucide-react';
+import { UserPlus, ChevronDown, ChevronUp, FileSpreadsheet } from 'lucide-react';
 import { StudentTableSkeleton } from '@/components/skeletons/StudentTableSkeleton';
 import { StatsCardsSkeleton } from '@/components/skeletons/StatsCardsSkeleton';
 import { StudentFormSkeleton } from '@/components/skeletons/StudentFormSkeleton';
