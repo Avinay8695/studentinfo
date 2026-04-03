@@ -64,6 +64,7 @@ const Index = () => {
   const [isAnalyticsDialogOpen, setIsAnalyticsDialogOpen] = useState(false);
   const [analyticsStudentId, setAnalyticsStudentId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
 
   // Open form when editing
   useEffect(() => {
