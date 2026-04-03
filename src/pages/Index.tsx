@@ -13,6 +13,7 @@ import { StudentAnalytics } from '@/components/StudentAnalytics';
 import { ExportButton } from '@/components/ExportButton';
 import { DashboardSummary } from '@/components/DashboardSummary';
 import { DateRangeAnalytics } from '@/components/DateRangeAnalytics';
+import { BulkImportStudents } from '@/components/BulkImportStudents';
 
 import { SectionNav, defaultSections } from '@/components/SectionNav';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
