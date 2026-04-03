@@ -249,6 +249,13 @@ const Index = () => {
         onClose={handleCloseAnalyticsDialog}
       />
 
+      {/* Bulk Import Dialog */}
+      <BulkImportStudents
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        onImport={bulkAddStudents}
+      />
+
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
 
