@@ -5,10 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { Upload, FileSpreadsheet, ClipboardPaste, CheckCircle2, XCircle, AlertTriangle, Download, Loader2, Trash2 } from 'lucide-react';
 import { COURSES, getCourseByName } from '@/data/courses';
 import { generateMonthlyPayments } from '@/hooks/useStudentsQuery';
+import * as XLSX from 'xlsx';
 
 interface ParsedStudent {
   fullName: string;
@@ -27,12 +29,12 @@ interface ParsedStudent {
 interface BulkImportStudentsProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (students: any[]) => Promise<any>;
+  onImport: (students: any[], onProgress?: (current: number, total: number) => void) => Promise<any>;
 }
 
 const EXPECTED_HEADERS = ['Full Name', 'Course', 'Batch', 'Mobile', 'Enrollment Date', 'Fees Status'];
 
-function validateStudent(row: Record<string, string>, index: number): ParsedStudent {
+function validateStudent(row: Record<string, string>): ParsedStudent {
   const errors: string[] = [];
   const fullName = (row['Full Name'] || row['full_name'] || row['name'] || '').trim();
   const courseName = (row['Course'] || row['course'] || '').trim();
@@ -93,6 +95,20 @@ function parseCSV(text: string): Record<string, string>[] {
   });
 }
 
+function parseXLSX(data: ArrayBuffer): Record<string, string>[] {
+  const workbook = XLSX.read(data, { type: 'array' });
+  const sheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+  return jsonData.map(row => {
+    const stringRow: Record<string, string> = {};
+    Object.keys(row).forEach(key => {
+      stringRow[key] = String(row[key]);
+    });
+    return stringRow;
+  });
+}
+
 function generateCSVTemplate(): string {
   return `Full Name,Course,Batch,Mobile,Enrollment Date,Fees Status
 John Doe,Diploma in Computer Application,Morning,9876543210,2025-01-15,not_paid
@@ -104,24 +120,42 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
   const [pasteText, setPasteText] = useState('');
   const [parsedStudents, setParsedStudents] = useState<ParsedStudent[]>([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validCount = parsedStudents.filter(s => s.isValid).length;
   const invalidCount = parsedStudents.filter(s => !s.isValid).length;
+  const progressPercent = importProgress.total > 0 ? Math.round((importProgress.current / importProgress.total) * 100) : 0;
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target?.result as string;
-      const rows = parseCSV(text);
-      setParsedStudents(rows.map((row, i) => validateStudent(row, i)));
-    };
-    reader.readAsText(file);
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+    if (isExcel) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const data = ev.target?.result as ArrayBuffer;
+        const rows = parseXLSX(data);
+        if (rows.length === 0) {
+          toast.error('No data found in the Excel file');
+          return;
+        }
+        setParsedStudents(rows.map((row) => validateStudent(row)));
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = ev.target?.result as string;
+        const rows = parseCSV(text);
+        setParsedStudents(rows.map((row) => validateStudent(row)));
+      };
+      reader.readAsText(file);
+    }
   }, []);
 
   const handleParsePaste = useCallback(() => {
@@ -134,7 +168,7 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
       toast.error('No valid data found. Make sure first line is headers.');
       return;
     }
-    setParsedStudents(rows.map((row, i) => validateStudent(row, i)));
+    setParsedStudents(rows.map((row) => validateStudent(row)));
   }, [pasteText]);
 
   const handleImport = async () => {
@@ -145,6 +179,8 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
     }
 
     setIsImporting(true);
+    setImportProgress({ current: 0, total: validStudents.length });
+
     try {
       const studentsToAdd = validStudents.map(s => {
         const payments = generateMonthlyPayments(s.enrollmentDate, s.courseDuration, s.feesAmount);
@@ -164,7 +200,9 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
         };
       });
 
-      await onImport(studentsToAdd);
+      await onImport(studentsToAdd, (current, total) => {
+        setImportProgress({ current, total });
+      });
       toast.success(`${validStudents.length} students imported successfully! 🎉`);
       handleReset();
       onClose();
@@ -172,6 +210,7 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
       toast.error('Import failed. Please try again.');
     } finally {
       setIsImporting(false);
+      setImportProgress({ current: 0, total: 0 });
     }
   };
 
@@ -179,6 +218,7 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
     setParsedStudents([]);
     setPasteText('');
     setFileName(null);
+    setImportProgress({ current: 0, total: 0 });
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -198,7 +238,7 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { handleReset(); onClose(); } }}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open && !isImporting) { handleReset(); onClose(); } }}>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
@@ -210,7 +250,21 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
           </DialogDescription>
         </DialogHeader>
 
-        {parsedStudents.length === 0 ? (
+        {isImporting ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 py-8">
+            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            <div className="w-full max-w-sm space-y-2">
+              <div className="flex justify-between text-sm font-medium">
+                <span>Importing students...</span>
+                <span className="text-primary">{importProgress.current}/{importProgress.total}</span>
+              </div>
+              <Progress value={progressPercent} className="h-3" />
+              <p className="text-xs text-muted-foreground text-center">
+                {progressPercent}% complete — please don't close this dialog
+              </p>
+            </div>
+          </div>
+        ) : parsedStudents.length === 0 ? (
           <Tabs value={tab} onValueChange={setTab} className="flex-1">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="upload" className="gap-2">
@@ -227,8 +281,8 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="w-10 h-10 mx-auto mb-3 text-primary/60" />
-                <p className="font-medium text-foreground">Click to upload CSV file</p>
-                <p className="text-sm text-muted-foreground mt-1">Supports .csv and .txt files</p>
+                <p className="font-medium text-foreground">Click to upload CSV or Excel file</p>
+                <p className="text-sm text-muted-foreground mt-1">Supports .csv, .txt, .xlsx, .xls files</p>
                 {fileName && (
                   <Badge variant="secondary" className="mt-3">{fileName}</Badge>
                 )}
@@ -236,7 +290,7 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv,.txt"
+                accept=".csv,.txt,.xlsx,.xls"
                 className="hidden"
                 onChange={handleFileUpload}
               />
@@ -270,7 +324,6 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
           </Tabs>
         ) : (
           <div className="flex-1 flex flex-col gap-4 min-h-0">
-            {/* Summary */}
             <div className="flex flex-wrap items-center gap-3">
               <Badge variant="default" className="gap-1 bg-emerald-600 hover:bg-emerald-700">
                 <CheckCircle2 className="w-3 h-3" />
@@ -287,7 +340,6 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
               </span>
             </div>
 
-            {/* Preview list */}
             <ScrollArea className="flex-1 max-h-[40vh] border rounded-lg">
               <div className="divide-y divide-border">
                 {parsedStudents.map((student, idx) => (
@@ -334,27 +386,17 @@ export function BulkImportStudents({ isOpen, onClose, onImport }: BulkImportStud
               </div>
             </ScrollArea>
 
-            {/* Actions */}
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleReset} className="flex-1">
                 Back
               </Button>
               <Button
                 onClick={handleImport}
-                disabled={validCount === 0 || isImporting}
+                disabled={validCount === 0}
                 className="flex-1 gap-2"
               >
-                {isImporting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Importing...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-4 h-4" />
-                    Import {validCount} Students
-                  </>
-                )}
+                <Upload className="w-4 h-4" />
+                Import {validCount} Students
               </Button>
             </div>
           </div>

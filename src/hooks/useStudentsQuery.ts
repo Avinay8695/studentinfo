@@ -428,9 +428,14 @@ export function useStudentsQuery() {
     return true;
   }, [addMutation]);
 
-  const bulkAddStudents = useCallback(async (studentsData: (Omit<Student, 'id' | 'createdAt' | 'updatedAt'> & { monthlyPayments?: MonthlyPayment[] })[]) => {
-    for (const studentData of studentsData) {
-      await addMutation.mutateAsync(studentData);
+  const bulkAddStudents = useCallback(async (
+    studentsData: (Omit<Student, 'id' | 'createdAt' | 'updatedAt'> & { monthlyPayments?: MonthlyPayment[] })[],
+    onProgress?: (current: number, total: number) => void
+  ) => {
+    const total = studentsData.length;
+    for (let i = 0; i < total; i++) {
+      await addMutation.mutateAsync(studentsData[i]);
+      onProgress?.(i + 1, total);
     }
     return true;
   }, [addMutation]);
