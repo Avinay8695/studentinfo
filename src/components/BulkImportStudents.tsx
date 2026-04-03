@@ -27,7 +27,7 @@ interface ParsedStudent {
 interface BulkImportStudentsProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (students: any[]) => Promise<void>;
+  onImport: (students: any[]) => Promise<any>;
 }
 
 const EXPECTED_HEADERS = ['Full Name', 'Course', 'Batch', 'Mobile', 'Enrollment Date', 'Fees Status'];
