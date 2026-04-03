@@ -509,6 +509,7 @@ export function useStudentsQuery() {
     setFeesFilter,
     editingStudent,
     addStudent,
+    bulkAddStudents,
     updateStudent,
     deleteStudent,
     restoreStudent,
