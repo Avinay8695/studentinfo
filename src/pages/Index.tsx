@@ -48,6 +48,7 @@ const Index = () => {
     isAdding,
     isUpdating,
     refetch,
+    bulkAddStudents,
   } = useStudentsQuery();
 
   const handleRefresh = useCallback(async () => {
