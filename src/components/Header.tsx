@@ -49,7 +49,7 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Fetch last login time from audit logs
+    // Fetch last login time from audit logs
   useEffect(() => {
     if (!user) return;
     const fetchLastLogin = async () => {
@@ -59,6 +59,7 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
           .select('created_at')
           .eq('action_type', 'LOGIN')
           .eq('entity_type', 'USER')
+          .eq('performed_by', user.id)
           .order('created_at', { ascending: false })
           .limit(2);
         // Second entry = previous login (first is current session)

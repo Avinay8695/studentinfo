@@ -254,6 +254,7 @@ const Index = () => {
         isOpen={isBulkImportOpen}
         onClose={() => setIsBulkImportOpen(false)}
         onImport={bulkAddStudents}
+        existingStudents={allStudents}
       />
 
       {/* Mobile Bottom Navigation */}
