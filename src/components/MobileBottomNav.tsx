@@ -47,10 +47,10 @@ export function MobileBottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
       {/* Gradient top edge */}
-      <div className="absolute -top-4 left-0 right-0 h-4 bg-gradient-to-t from-background/80 to-transparent pointer-events-none" />
+      <div className="absolute -top-6 left-0 right-0 h-6 bg-gradient-to-t from-background to-transparent pointer-events-none" />
       
-      <div className="bg-card/90 backdrop-blur-2xl border-t border-border/50 shadow-[0_-8px_32px_-8px_hsl(var(--foreground)/0.08)]">
-        <div className="flex items-end justify-around px-2 pt-1.5 pb-1 safe-area-bottom">
+      <div className="bg-card/80 backdrop-blur-2xl border-t border-border/30 shadow-[0_-4px_24px_-4px_hsl(var(--foreground)/0.06)]">
+        <div className="flex items-end justify-around px-1.5 pt-1 pb-0.5 safe-area-bottom">
           {sections.map((section) => {
             const Icon = section.icon;
             const isActive = activeSection === section.id;
@@ -61,21 +61,19 @@ export function MobileBottomNav() {
                 <button
                   key={section.id}
                   onClick={() => scrollToSection(section.id)}
-                  className={cn(
-                    "relative flex flex-col items-center -mt-4 transition-all duration-300",
-                  )}
+                  className="relative flex flex-col items-center -mt-5 transition-all duration-300"
                   aria-label={section.label}
                 >
                   <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 border",
+                    "w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 border",
                     isActive
                       ? "bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-primary/30 border-primary/30 scale-110"
                       : "bg-primary/90 text-primary-foreground border-primary/20 active:scale-95"
                   )}>
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-4.5 h-4.5" />
                   </div>
                   <span className={cn(
-                    "text-[9px] font-semibold mt-1 transition-colors duration-200",
+                    "text-[8px] font-bold mt-0.5 transition-colors duration-200",
                     isActive ? "text-primary" : "text-muted-foreground"
                   )}>
                     {section.label}
@@ -89,22 +87,22 @@ export function MobileBottomNav() {
                 key={section.id}
                 onClick={() => scrollToSection(section.id)}
                 className={cn(
-                  "relative flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-xl transition-all duration-300 min-w-[52px]",
+                  "relative flex flex-col items-center gap-0 py-1 px-2.5 rounded-xl transition-all duration-300 min-w-[48px]",
                   isActive ? "text-primary" : "text-muted-foreground active:text-foreground"
                 )}
                 aria-label={section.label}
               >
                 {/* Active indicator pill */}
                 {isActive && (
-                  <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-5 h-1 bg-primary rounded-full animate-scale-in" />
+                  <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-gradient-to-r from-primary to-accent rounded-full animate-scale-in" />
                 )}
                 <div className={cn(
                   "p-1 rounded-lg transition-all duration-300",
                   isActive && "bg-primary/10"
                 )}>
-                  <Icon className={cn("w-5 h-5 transition-all duration-300", isActive && "scale-110")} />
+                  <Icon className={cn("w-[18px] h-[18px] transition-all duration-300", isActive && "scale-110")} />
                 </div>
-                <span className={cn("text-[10px] font-medium transition-all duration-200", isActive && "font-bold")}>
+                <span className={cn("text-[9px] font-medium transition-all duration-200 leading-tight", isActive && "font-bold")}>
                   {section.label}
                 </span>
               </button>
