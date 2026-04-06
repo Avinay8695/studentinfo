@@ -40,6 +40,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <RecoveryRedirectHandler />
+          <ScrollToTopOnNavigate />
           <Routes>
             <Route path="/" element={
               <ProtectedRoute>
