@@ -52,7 +52,7 @@ export function SectionNav({ sections }: SectionNavProps) {
   }, [sections]);
 
   return (
-    <div className="fixed left-4 top-1/2 -translate-y-1/2 z-40 hidden xl:flex flex-col gap-2 p-2 bg-card/80 backdrop-blur-lg rounded-2xl border border-border/50 shadow-2xl">
+    <div className="fixed left-3 top-1/2 -translate-y-1/2 z-40 hidden xl:flex flex-col gap-1.5 p-1.5 glass-section !rounded-2xl !p-2 shadow-2xl">
       {sections.map((section) => (
         <Button
           key={section.id}
@@ -60,9 +60,9 @@ export function SectionNav({ sections }: SectionNavProps) {
           size="icon"
           onClick={() => scrollToSection(section.id)}
           className={cn(
-            "w-10 h-10 rounded-xl transition-all duration-300",
+            "w-9 h-9 rounded-xl transition-all duration-300",
             activeSection === section.id 
-              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" 
+              ? "bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25" 
               : "hover:bg-muted text-muted-foreground hover:text-foreground"
           )}
           title={section.label}
