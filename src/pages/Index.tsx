@@ -135,47 +135,52 @@ const Index = () => {
       {/* Section Navigation */}
       <SectionNav sections={defaultSections} />
       
-      <main className="flex-1 container max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-10 pb-20 md:pb-10 relative z-10">
-        {/* Dashboard Summary - always reserve space to prevent CLS */}
+      <main className="flex-1 container max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-10 pb-24 md:pb-10 relative z-10 stagger-children">
+        {/* Dashboard Summary */}
         <div id="dashboard-summary" className="min-h-[50px]">
           {!studentsLoading && stats.total > 0 && (
             <DashboardSummary stats={stats} />
           )}
         </div>
 
+        {/* Section Divider */}
+        <div className="section-divider" />
+
         {/* Stats Cards with Export Button */}
-        <div id="stats" className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-          <div className="flex-1">
-            {studentsLoading ? <StatsCardsSkeleton /> : <StatsCards stats={stats} />}
-          </div>
-          <div className="flex justify-end sm:mt-0">
+        <div id="stats" className="glass-section mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <span className="section-label">
+              <PieChart className="w-3 h-3" />
+              Statistics
+            </span>
             <ExportButton students={allStudents} />
           </div>
+          {studentsLoading ? <StatsCardsSkeleton /> : <StatsCards stats={stats} />}
         </div>
 
         {/* Student Form - Collapsible */}
-        <div id="add-student" className="mb-8 space-y-3">
+        <div id="add-student" className="mb-4 sm:mb-6">
           <div className="flex gap-2">
             <Collapsible open={isFormOpen} onOpenChange={setIsFormOpen} className="flex-1">
               <CollapsibleTrigger asChild>
                 <Button
                   variant={isFormOpen ? "secondary" : "default"}
-                  className={`w-full py-6 text-lg font-semibold transition-all duration-500 ${
+                  className={`w-full py-5 sm:py-6 text-base sm:text-lg font-semibold transition-all duration-500 rounded-xl sm:rounded-2xl ${
                     isFormOpen 
                       ? 'bg-muted hover:bg-muted/80 text-muted-foreground border border-border' 
                       : 'btn-glow bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] hover:bg-[length:100%_100%] transition-all duration-700'
                   }`}
                 >
-                  <UserPlus className="w-5 h-5 mr-2" />
+                  <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   {editingStudent ? 'Edit Student' : 'Add New Student'}
                   {isFormOpen ? (
-                    <ChevronUp className="w-5 h-5 ml-2" />
+                    <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 ml-2" />
+                    <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                   )}
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="mt-4 animate-fade-in">
+              <CollapsibleContent className="mt-3 sm:mt-4 animate-fade-in">
                 {studentsLoading ? (
                   <StudentFormSkeleton />
                 ) : (
@@ -192,19 +197,27 @@ const Index = () => {
             </Collapsible>
             <Button
               variant="outline"
-              className="py-6 px-4 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all"
+              className="py-5 sm:py-6 px-3 sm:px-4 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all rounded-xl sm:rounded-2xl"
               onClick={() => setIsBulkImportOpen(true)}
               title="Bulk Import"
             >
-              <FileSpreadsheet className="w-5 h-5 text-primary" />
+              <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               <span className="hidden sm:inline ml-2 font-medium">Bulk Import</span>
             </Button>
           </div>
         </div>
 
+        {/* Section Divider */}
+        <div className="section-divider" />
 
         {/* Student Table */}
-        <div id="students">
+        <div id="students" className="glass-section mb-4 sm:mb-6">
+          <div className="flex items-center mb-3 sm:mb-4">
+            <span className="section-label">
+              <Users className="w-3 h-3" />
+              Students
+            </span>
+          </div>
           {studentsLoading ? (
             <StudentTableSkeleton />
           ) : (
@@ -223,10 +236,21 @@ const Index = () => {
           )}
         </div>
 
-        {/* Date Range Analytics - Below Students */}
-        <div id="analytics" className="mt-8">
+        {/* Section Divider */}
+        <div className="section-divider" />
+
+        {/* Date Range Analytics */}
+        <div id="analytics">
           {!studentsLoading && allStudents.length > 0 && (
-            <DateRangeAnalytics students={allStudents} />
+            <div className="glass-section">
+              <div className="flex items-center mb-3 sm:mb-4">
+                <span className="section-label">
+                  <BarChart3 className="w-3 h-3" />
+                  Analytics
+                </span>
+              </div>
+              <DateRangeAnalytics students={allStudents} />
+            </div>
           )}
         </div>
       </main>
