@@ -177,7 +177,6 @@ export function StudentTable({
                               </div>
                             );
                           })()}
-                          </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-card-foreground">{student.fullName}</span>
