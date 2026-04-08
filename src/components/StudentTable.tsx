@@ -207,10 +207,8 @@ export function StudentTable({
                           const colors = getCourseColors(student.course);
                           return (
                             <div className="flex items-center gap-2">
-                              <GraduationCap className={`w-4 h-4 ${colors.text}`} />
-                              <Badge variant="outline" className={`text-xs border ${colors.badge}`}>
-                                {student.course}
-                              </Badge>
+                              <GraduationCap className={`w-4 h-4 flex-shrink-0 ${colors.text}`} />
+                              <span className={`text-sm font-medium ${colors.text}`}>{student.course}</span>
                             </div>
                           );
                         })()}

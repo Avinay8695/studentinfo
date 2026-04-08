@@ -181,15 +181,15 @@ export function SwipeableStudentCard({
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
                   <GraduationCap className={`w-3 h-3 ${courseColors.text} flex-shrink-0`} />
-                  <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 border ${courseColors.badge}`}>
+                  <span className={`text-[11px] truncate ${courseColors.text} font-medium`}>
                     {student.course}
-                  </Badge>
+                  </span>
                   {student.batch && (
                     <>
-                      <span className="text-muted-foreground/30">•</span>
-                      <span className="text-[11px] text-muted-foreground">{student.batch}</span>
+                      <span className="text-muted-foreground/30 flex-shrink-0">•</span>
+                      <span className="text-[11px] text-muted-foreground flex-shrink-0">{student.batch}</span>
                     </>
                   )}
                 </div>
