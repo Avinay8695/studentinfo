@@ -1,3 +1,5 @@
+import { COURSES } from '@/data/courses';
+
 // Course category color mapping for badges & avatars
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; badge: string; avatar: string }> = {
   'Computer Applications': {
@@ -45,15 +47,8 @@ const DEFAULT_COLORS = {
   avatar: 'from-primary to-accent',
 };
 
-export function getCourseCategory(courseName: string): string {
-  const { COURSES } = require('@/data/courses');
-  const course = COURSES.find((c: any) => c.name === courseName);
-  return course?.category || 'Computer Applications';
-}
-
 export function getCourseColors(courseName: string) {
-  const { COURSES } = require('@/data/courses');
-  const course = COURSES.find((c: any) => c.name === courseName);
+  const course = COURSES.find(c => c.name === courseName);
   const category = course?.category || '';
   return CATEGORY_COLORS[category] || DEFAULT_COLORS;
 }
