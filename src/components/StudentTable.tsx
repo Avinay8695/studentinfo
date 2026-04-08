@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap, CreditCard, BarChart3, Phone, AlertTriangle } from 'lucide-react';
+import { Search, Pencil, Trash2, Users, Filter, TableIcon, GraduationCap, CreditCard, BarChart3, Phone, AlertTriangle, SearchX } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { SwipeableStudentCard } from './SwipeableStudentCard';
+import { getCourseColors, getInitials } from '@/utils/courseColors';
+import { EmptyState } from './EmptyState';
 
 interface StudentTableProps {
   students: Student[];
@@ -166,9 +168,15 @@ export function StudentTable({
                         {String(index + 1).padStart(2, '0')}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-sm shadow-md">
-                            {student.fullName.charAt(0).toUpperCase()}
+                          <div className="flex items-center gap-3">
+                          {(() => {
+                            const colors = getCourseColors(student.course);
+                            return (
+                              <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${colors.avatar} flex items-center justify-center text-white font-bold text-sm shadow-md`}>
+                                {getInitials(student.fullName)}
+                              </div>
+                            );
+                          })()}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
@@ -196,10 +204,17 @@ export function StudentTable({
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <GraduationCap className="w-4 h-4 text-primary" />
-                          <span className="text-muted-foreground text-sm">{student.course}</span>
-                        </div>
+                        {(() => {
+                          const colors = getCourseColors(student.course);
+                          return (
+                            <div className="flex items-center gap-2">
+                              <GraduationCap className={`w-4 h-4 ${colors.text}`} />
+                              <Badge variant="outline" className={`text-xs border ${colors.badge}`}>
+                                {student.course}
+                              </Badge>
+                            </div>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {student.batch || '—'}
@@ -280,19 +295,19 @@ export function StudentTable({
           </div>
         </>
       ) : (
-        <div className="p-12 sm:p-20 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 mb-4 sm:mb-5 animate-float">
-            <Users className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
-          </div>
-          <p className="text-lg sm:text-xl font-bold text-card-foreground font-display">
-            No students found
-          </p>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
-            {searchQuery || feesFilter !== 'all'
+        <EmptyState
+          icon={searchQuery || feesFilter !== 'all' 
+            ? <SearchX className="w-10 h-10" /> 
+            : <Users className="w-10 h-10" />
+          }
+          title={searchQuery || feesFilter !== 'all' ? 'No results found' : 'No students yet'}
+          description={
+            searchQuery || feesFilter !== 'all'
               ? 'Try adjusting your search or filter criteria'
-              : 'Get started by adding your first student using the form above'}
-          </p>
-        </div>
+              : 'Get started by adding your first student using the form above'
+          }
+          variant={searchQuery || feesFilter !== 'all' ? 'search' : 'students'}
+        />
       )}
 
       {/* Delete Confirmation Dialog */}
