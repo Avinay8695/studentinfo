@@ -29,6 +29,7 @@ import { Trash2, RotateCcw, AlertTriangle, Inbox, ArrowLeft } from 'lucide-react
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { EmptyState } from '@/components/EmptyState';
 
 const Trash = () => {
   const { isAdmin } = useAuth();
@@ -97,22 +98,23 @@ const Trash = () => {
           {/* Empty State */}
           {!isLoading && trashedStudents.length === 0 && (
             <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="p-4 bg-muted rounded-full mb-4">
-                  <Inbox className="w-10 h-10 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold mb-1">Trash is empty</h3>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  Deleted students will appear here. You can restore them or permanently remove them.
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-6 rounded-xl"
-                  onClick={() => navigate('/')}
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Dashboard
-                </Button>
+              <CardContent className="p-0">
+                <EmptyState
+                  icon={<Inbox className="w-10 h-10" />}
+                  title="Trash is empty"
+                  description="Deleted students will appear here. You can restore them or permanently remove them."
+                  variant="trash"
+                  action={
+                    <Button
+                      variant="outline"
+                      className="rounded-xl"
+                      onClick={() => navigate('/')}
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Back to Dashboard
+                    </Button>
+                  }
+                />
               </CardContent>
             </Card>
           )}
