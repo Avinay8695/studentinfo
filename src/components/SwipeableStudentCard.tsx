@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, GraduationCap, BarChart3, CreditCard, Phone, AlertTriangle, ChevronLeft, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { hapticLight, hapticMedium, hapticHeavy } from '@/utils/haptics';
+import { getCourseColors, getInitials } from '@/utils/courseColors';
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -102,6 +103,8 @@ export function SwipeableStudentCard({
   };
   const sColors = hasOverdue ? severityColors[overdueSeverity] : null;
 
+  const courseColors = getCourseColors(student.course);
+
   return (
     <div className="relative overflow-hidden rounded-2xl" ref={cardRef}>
       {/* Background actions */}
@@ -157,9 +160,9 @@ export function SwipeableStudentCard({
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg ${
                   hasOverdue 
                     ? `bg-gradient-to-br ${sColors!.avatar}` 
-                    : 'bg-gradient-to-br from-primary to-accent shadow-primary/20'
+                    : `bg-gradient-to-br ${courseColors.avatar}`
                 }`}>
-                  {student.fullName.charAt(0).toUpperCase()}
+                  {getInitials(student.fullName)}
                 </div>
                 {hasOverdue && (
                   <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 ${sColors!.dot} rounded-full border-2 border-card flex items-center justify-center`}>
@@ -179,8 +182,10 @@ export function SwipeableStudentCard({
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <GraduationCap className="w-3 h-3 text-primary flex-shrink-0" />
-                  <span className="text-[11px] text-muted-foreground truncate">{student.course}</span>
+                  <GraduationCap className={`w-3 h-3 ${courseColors.text} flex-shrink-0`} />
+                  <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 border ${courseColors.badge}`}>
+                    {student.course}
+                  </Badge>
                   {student.batch && (
                     <>
                       <span className="text-muted-foreground/30">•</span>

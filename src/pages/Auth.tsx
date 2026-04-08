@@ -23,6 +23,8 @@ import { logUserLogin } from '@/utils/logger';
 import { ForgotPasswordDialog } from '@/components/ForgotPasswordDialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Link } from 'react-router-dom';
+import { FloatingParticles } from '@/components/FloatingParticles';
+import { TypewriterText } from '@/components/TypewriterText';
 
 const emailSchema = z.string().trim().email('Invalid email address').max(255, 'Email too long');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password too long');
@@ -166,6 +168,9 @@ export default function Auth() {
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-violet-500/30 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '1s' }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/20 rounded-full blur-[140px] animate-float" />
         
+        {/* Floating Particles */}
+        <FloatingParticles />
+        
         {/* Grid pattern overlay */}
         <div className="absolute inset-0 opacity-[0.03]" style={{ 
           backgroundImage: 'linear-gradient(90deg, white 1px, transparent 1px), linear-gradient(white 1px, transparent 1px)',
@@ -195,7 +200,11 @@ export default function Auth() {
               </h1>
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-300 animate-pulse" />
             </div>
-            <p className="text-white/60 text-sm">Student Management System</p>
+            <TypewriterText 
+              texts={['Student Management System', 'Track Fees & Payments', 'Manage Your Institute']}
+              className="text-white/60 text-sm"
+              speed={60}
+            />
           </div>
 
           {/* Tabs */}
