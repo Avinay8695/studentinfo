@@ -1,7 +1,8 @@
 import { useRef, useState, useCallback } from 'react';
 import { Student } from '@/types/student';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, GraduationCap, BarChart3, CreditCard, Phone, AlertTriangle, ChevronLeft, ChevronDown } from 'lucide-react';
+import { Pencil, Trash2, GraduationCap, BarChart3, CreditCard, Phone, AlertTriangle, ChevronLeft, ChevronDown, MessageCircle } from 'lucide-react';
+import { openWhatsAppReminder } from '@/utils/whatsappReminder';
 import { Badge } from '@/components/ui/badge';
 import { hapticLight, hapticMedium, hapticHeavy } from '@/utils/haptics';
 import { getCourseColors, getInitials } from '@/utils/courseColors';
@@ -313,6 +314,28 @@ export function SwipeableStudentCard({
                 Payments
               </Button>
             </div>
+            {/* WhatsApp Reminder */}
+            {hasOverdue && student.mobile && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  hapticLight();
+                  const pendingTotal = overduePayments.reduce((s, p) => s + p.amount, 0);
+                  openWhatsAppReminder(
+                    student.fullName,
+                    student.mobile,
+                    overduePayments.map(p => ({ month: p.month, year: p.year, amount: p.amount })),
+                    pendingTotal
+                  );
+                }}
+                className="w-full min-h-[42px] text-xs gap-1.5 rounded-xl bg-emerald-500/10 border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                WhatsApp Reminder
+              </Button>
+            )}
           </div>
         </div>
 
