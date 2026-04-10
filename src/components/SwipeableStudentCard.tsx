@@ -172,8 +172,8 @@ export function SwipeableStudentCard({
               </div>
               
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <p className="font-bold text-card-foreground text-sm truncate">{student.fullName}</p>
+                <div className="flex items-start gap-1.5 flex-wrap">
+                  <p className="font-bold text-card-foreground text-sm break-words">{student.fullName}</p>
                   {hasOverdue && (
                     <Badge className={`text-[9px] px-2 py-0.5 h-4.5 gap-1 flex-shrink-0 font-extrabold animate-pulse shadow-sm border ${sColors!.badge}`}>
                       <AlertTriangle className="w-2.5 h-2.5" />
