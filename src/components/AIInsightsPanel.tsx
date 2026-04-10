@@ -11,8 +11,7 @@ interface AIInsightsPanelProps {
     paid: number;
     notPaid: number;
     totalFees: number;
-    collectedFees: number;
-    pendingFees: number;
+    paidFees: number;
   };
   overdueStudents: number;
   totalOverdueMonths: number;
@@ -37,14 +36,16 @@ export function AIInsightsPanel({ stats, overdueStudents, totalOverdueMonths, ac
     setResponse('');
     setActivePrompt(promptType);
 
-    const collectionRate = stats.totalFees > 0 ? Math.round((stats.collectedFees / stats.totalFees) * 100) : 0;
+    const collectedFees = stats.paidFees;
+    const pendingFees = stats.totalFees - stats.paidFees;
+    const collectionRate = stats.totalFees > 0 ? Math.round((collectedFees / stats.totalFees) * 100) : 0;
 
     const body = {
       stats: {
         totalStudents: stats.total,
         totalRevenue: stats.totalFees,
-        totalCollected: stats.collectedFees,
-        totalPending: stats.pendingFees,
+        totalCollected: collectedFees,
+        totalPending: pendingFees,
         collectionRate,
         overdueStudents,
         totalOverdueMonths,
