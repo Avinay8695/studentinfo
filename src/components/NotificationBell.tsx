@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Bell, AlertTriangle, ChevronRight, TrendingUp, CheckCircle2, Clock, X } from 'lucide-react';
+import { Bell, AlertTriangle, ChevronRight, TrendingUp, CheckCircle2, Clock, X, MessageCircle } from 'lucide-react';
+import { openWhatsAppReminder } from '@/utils/whatsappReminder';
 import { Student } from '@/types/student';
 import { Button } from '@/components/ui/button';
 import {
@@ -270,8 +271,21 @@ export function NotificationBell({ students, onViewPayments, scrolled = false }:
                         </div>
                       </div>
 
-                      {/* Amount + Arrow */}
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      {/* WhatsApp + Amount + Arrow */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {student.mobile && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              hapticLight();
+                              openWhatsAppReminder(student.fullName, student.mobile, overdueMonths, totalPending);
+                            }}
+                            className="w-7 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 flex items-center justify-center transition-colors"
+                            title="Send WhatsApp Reminder"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          </button>
+                        )}
                         <div className="text-right">
                           <p className={`text-xs font-bold ${
                             severity === 'critical' ? 'text-rose-500' :

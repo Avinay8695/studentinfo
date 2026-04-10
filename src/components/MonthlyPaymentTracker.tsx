@@ -1,7 +1,8 @@
 import { Student, MonthlyPayment } from '@/types/student';
 import { ResponsiveModal } from '@/components/ui/responsive-modal';
 import { Button } from '@/components/ui/button';
-import { Check, X, Calendar, IndianRupee, User, GraduationCap, Clock, Lock, Receipt } from 'lucide-react';
+import { Check, X, Calendar, IndianRupee, User, GraduationCap, Clock, Lock, Receipt, MessageCircle } from 'lucide-react';
+import { openWhatsAppReminder } from '@/utils/whatsappReminder';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -91,6 +92,26 @@ export function MonthlyPaymentTracker({
               <p className="text-xs text-muted-foreground">Pending</p>
             </div>
           </div>
+
+          {/* WhatsApp Reminder Button */}
+          {student.mobile && totalPending > 0 && (
+            <div className="mt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const overdueMonths = payments
+                    .filter(p => !p.isPaid)
+                    .map(p => ({ month: p.month, year: p.year, amount: p.amount }));
+                  openWhatsAppReminder(student.fullName, student.mobile, overdueMonths, totalPending);
+                }}
+                className="w-full gap-2 rounded-xl bg-emerald-500/10 border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Send WhatsApp Reminder
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Admin Notice for Users */}

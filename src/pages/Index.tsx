@@ -14,6 +14,7 @@ import { ExportButton } from '@/components/ExportButton';
 import { DashboardSummary } from '@/components/DashboardSummary';
 import { DateRangeAnalytics } from '@/components/DateRangeAnalytics';
 import { BulkImportStudents } from '@/components/BulkImportStudents';
+import { AIInsightsPanel } from '@/components/AIInsightsPanel';
 
 import { SectionNav, defaultSections } from '@/components/SectionNav';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
@@ -283,6 +284,16 @@ const Index = () => {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* AI Insights Panel */}
+      {!studentsLoading && stats.total > 0 && (
+        <AIInsightsPanel 
+          stats={stats}
+          overdueStudents={allStudents.filter(s => (s.monthlyPayments || []).some(p => !p.isPaid && (p.year < new Date().getFullYear() || (p.year === new Date().getFullYear() && p.month < new Date().getMonth())))).length}
+          totalOverdueMonths={allStudents.reduce((sum, s) => sum + (s.monthlyPayments || []).filter(p => !p.isPaid && (p.year < new Date().getFullYear() || (p.year === new Date().getFullYear() && p.month < new Date().getMonth()))).length, 0)}
+          activeCourses={new Set(allStudents.map(s => s.course)).size}
+        />
+      )}
 
       {/* Scroll to Top Button - hidden on mobile (bottom nav covers it) */}
       <ScrollToTop />
