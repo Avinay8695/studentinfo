@@ -9,17 +9,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { stats, promptType } = await req.json();
+    const { messages, stats } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are an AI analytics assistant for a student fee management institute. You analyze aggregated data and provide actionable insights. Keep responses concise, use bullet points, and include specific numbers. Respond in a mix of Hindi and English (Hinglish) to match the user's preference. Use emojis sparingly for visual appeal.
-
-IMPORTANT: You only receive aggregated statistics, never personal student data. Base your analysis on the numbers provided.`;
-
-    let userPrompt = '';
-    const statsText = `
-Institute Stats:
+    const statsContext = stats ? `
+Current Institute Data (use this to answer questions):
 - Total Students: ${stats.totalStudents}
 - Total Revenue Expected: ₹${stats.totalRevenue}
 - Total Collected: ₹${stats.totalCollected}
@@ -29,23 +24,28 @@ Institute Stats:
 - Total Overdue Months: ${stats.totalOverdueMonths}
 - Fully Paid Students: ${stats.fullyPaidStudents}
 - Active Courses: ${stats.activeCourses}
-`;
+- Course List: ${stats.courseList || 'N/A'}
+` : '';
 
-    switch (promptType) {
-      case 'revenue_forecast':
-        userPrompt = `${statsText}\n\nBased on these stats, provide a revenue forecast and collection analysis. Include: current collection efficiency, projected monthly collection, suggestions to improve collection rate, and risk assessment.`;
-        break;
-      case 'at_risk':
-        userPrompt = `${statsText}\n\nAnalyze the at-risk situation. ${stats.overdueStudents} students have overdue payments totaling ${stats.totalOverdueMonths} months. Provide: severity assessment, impact on revenue, recommended actions for recovery, and prioritization strategy.`;
-        break;
-      case 'collection_tips':
-        userPrompt = `${statsText}\n\nProvide practical collection tips and strategies for the institute. Include: best practices for fee reminders, timing strategies, communication templates ideas, and how to handle chronic defaulters.`;
-        break;
-      case 'overall':
-      default:
-        userPrompt = `${statsText}\n\nProvide a comprehensive analysis of the institute's financial health. Cover: overall performance rating, key strengths, areas of concern, top 3 actionable recommendations, and a brief outlook.`;
-        break;
-    }
+    const systemPrompt = `You are "SD Assistant" — a smart AI assistant for the Success Desirous student fee management platform. You help institute admins by answering questions about their data, providing insights, and giving actionable advice.
+
+${statsContext}
+
+Your capabilities:
+1. **Data Analysis**: Answer questions about revenue, collections, pending fees, student stats
+2. **Revenue Forecasting**: Predict monthly collections based on current trends  
+3. **At-Risk Analysis**: Identify overdue payment patterns and suggest recovery strategies
+4. **Collection Tips**: Provide practical fee collection strategies
+5. **Platform Help**: Explain how to use features like WhatsApp reminders, bulk import, export, etc.
+6. **General Advice**: Help with institute management best practices
+
+Rules:
+- Keep responses concise and use bullet points when helpful
+- Use Hinglish (mix of Hindi and English) naturally
+- Use emojis sparingly for visual appeal
+- When asked about specific students, explain you only have aggregated data for privacy
+- Always be helpful, proactive, and suggest follow-up actions
+- If asked something unrelated to institute management, politely redirect`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -57,7 +57,7 @@ Institute Stats:
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          ...messages,
         ],
         stream: true,
       }),
@@ -65,13 +65,13 @@ Institute Stats:
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Thoda wait karo aur try karo! 🙏" }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds in Settings > Workspace > Usage." }), {
+        return new Response(JSON.stringify({ error: "AI credits khatam ho gaye. Settings > Workspace > Usage me funds add karo." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
