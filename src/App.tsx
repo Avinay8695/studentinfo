@@ -40,6 +40,21 @@ function ScrollToTopOnNavigate() {
   return null;
 }
 
+function DisableScrollRestoration() {
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      const prev = window.history.scrollRestoration;
+      window.history.scrollRestoration = 'manual';
+      // Force top on initial mount (covers hard refresh)
+      window.scrollTo({ top: 0, left: 0 });
+      return () => {
+        window.history.scrollRestoration = prev;
+      };
+    }
+  }, []);
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
@@ -48,6 +63,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <RecoveryRedirectHandler />
+          <DisableScrollRestoration />
           <ScrollToTopOnNavigate />
           <Routes>
             <Route path="/" element={
