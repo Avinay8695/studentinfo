@@ -293,6 +293,8 @@ const Index = () => {
           totalOverdueMonths={allStudents.reduce((sum, s) => sum + (s.monthlyPayments || []).filter(p => !p.isPaid && (p.year < new Date().getFullYear() || (p.year === new Date().getFullYear() && p.month < new Date().getMonth()))).length, 0)}
           activeCourses={new Set(allStudents.map(s => s.course)).size}
           courseList={[...new Set(allStudents.map(s => s.course))].join(', ')}
+          isAdmin={isAdmin}
+          students={allStudents}
         />
       )}
 
