@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { Bot, Send, Loader2, Trash2, Sparkles } from 'lucide-react';
+import { Bot, Send, Loader2, Trash2, Sparkles, Copy, RefreshCw, Check, Shield, User as UserIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
+import type { Student } from '@/types/student';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -21,23 +22,36 @@ interface AIChatBotProps {
   totalOverdueMonths: number;
   activeCourses: number;
   courseList?: string;
+  isAdmin?: boolean;
+  students?: Student[];
 }
 
-const QUICK_PROMPTS = [
-  '📊 Mera overall performance kaisa hai?',
-  '💰 Revenue forecast batao',
-  '⚠️ At-risk students ka analysis',
-  '💡 Collection improve karne ke tips',
-  '🔔 WhatsApp reminder kaise bhejein?',
+const ADMIN_PROMPTS = [
+  '📊 Overall performance summary',
+  '💰 Next month ka revenue forecast',
+  '⚠️ Top 5 defaulters list karo',
+  '📞 Sabse zyada overdue wale students ke mobile do',
+  '🎯 Course-wise collection breakdown',
+  '💡 Collection improve karne ke 3 tips',
 ];
 
-export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCourses, courseList }: AIChatBotProps) {
+const USER_PROMPTS = [
+  '📊 Overall stats dikhao',
+  '💰 Collection rate kaisa hai?',
+  '🔔 WhatsApp reminder kaise bhejein?',
+  '💡 Best practices for fee collection',
+];
+
+export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCourses, courseList, isAdmin = false, students = [] }: AIChatBotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const QUICK_PROMPTS = isAdmin ? ADMIN_PROMPTS : USER_PROMPTS;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -90,6 +104,19 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
         body: JSON.stringify({
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
           stats: buildStats(),
+          isAdmin,
+          students: isAdmin ? students.map(s => ({
+            id: s.id,
+            fullName: s.fullName,
+            course: s.course,
+            batch: s.batch,
+            mobile: s.mobile,
+            enrollmentDate: s.enrollmentDate,
+            courseDuration: s.courseDuration,
+            monthlyFee: s.monthlyFee,
+            feesStatus: s.feesStatus,
+            monthlyPayments: s.monthlyPayments,
+          })) : undefined,
         }),
       });
 
@@ -159,38 +186,71 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading, buildStats]);
+  }, [messages, isLoading, buildStats, isAdmin, students]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     sendMessage(input);
   };
 
+  const handleCopy = (content: string, idx: number) => {
+    navigator.clipboard.writeText(content);
+    setCopiedIdx(idx);
+    toast.success('Copied!');
+    setTimeout(() => setCopiedIdx(null), 1500);
+  };
+
+  const handleRegenerate = () => {
+    // Find last user message and resend
+    const lastUserIdx = [...messages].reverse().findIndex(m => m.role === 'user');
+    if (lastUserIdx === -1) return;
+    const realIdx = messages.length - 1 - lastUserIdx;
+    const lastUserMsg = messages[realIdx];
+    setMessages(messages.slice(0, realIdx));
+    setTimeout(() => sendMessage(lastUserMsg.content), 50);
+  };
+
   return (
     <>
-      {/* Floating AI Chat Button */}
+      {/* Floating AI Chat Button — Premium glow */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 hover:scale-105 transition-all duration-300 flex items-center justify-center group"
+        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 group"
         aria-label="Open AI Chat"
       >
-        <Bot className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" />
+        {/* Animated glow ring */}
+        <span className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-purple-600 blur-xl opacity-60 group-hover:opacity-90 transition-opacity animate-pulse" />
+        {/* Rotating border gradient */}
+        <span className="absolute -inset-[2px] rounded-2xl bg-[conic-gradient(from_0deg,#a855f7,#ec4899,#8b5cf6,#a855f7)] opacity-80 group-hover:opacity-100" style={{ animation: 'spin 4s linear infinite' }} />
+        <span className="relative flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-2xl shadow-violet-500/40 group-hover:scale-105 transition-all duration-300">
+          <Bot className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" />
+          {/* Online dot */}
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-violet-700 animate-pulse" />
+          {/* Sparkle */}
+          <Sparkles className="absolute -top-1 -right-1 w-3 h-3 text-yellow-300 animate-pulse" />
+        </span>
       </button>
 
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent className="w-full sm:max-w-lg flex flex-col p-0 gap-0">
-          <SheetHeader className="px-4 pt-4 pb-3 border-b border-border/30">
+        <SheetContent className="w-full sm:max-w-lg flex flex-col p-0 gap-0 bg-gradient-to-b from-background via-background to-violet-500/[0.03]">
+          <SheetHeader className="px-4 pt-4 pb-3 border-b border-border/30 bg-gradient-to-r from-violet-500/10 via-fuchsia-500/5 to-transparent">
             <SheetTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-lg">
-                <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500/10 to-purple-500/10">
-                  <Bot className="w-5 h-5 text-violet-500" />
+              <div className="flex items-center gap-2.5 text-lg">
+                <div className="relative p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30">
+                  <Bot className="w-5 h-5 text-white" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-background" />
                 </div>
-                SD Assistant
+                <div className="flex flex-col items-start">
+                  <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent font-bold">SD Assistant</span>
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                    {isAdmin ? <><Shield className="w-2.5 h-2.5 text-violet-500" /> Admin Mode · Full Access</> : <><UserIcon className="w-2.5 h-2.5" /> User Mode</>}
+                  </span>
+                </div>
               </div>
               {messages.length > 0 && (
                 <button
                   onClick={() => setMessages([])}
-                  className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                   title="Clear chat"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -198,7 +258,9 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
               )}
             </SheetTitle>
             <SheetDescription className="text-xs">
-              Apne institute ke baare me kuch bhi puchho — data, tips, help! 🤖
+              {isAdmin
+                ? 'Kuch bhi puchho — student details, payments, forecasts, sab kuch! ✨'
+                : 'Apne institute ke baare me general info aur tips puchho 🤖'}
             </SheetDescription>
           </SheetHeader>
 
@@ -206,19 +268,22 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
             {messages.length === 0 && !isLoading && (
               <div className="flex flex-col items-center justify-center h-full text-center py-8">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 mb-4">
-                  <Sparkles className="w-8 h-8 text-violet-500 opacity-60" />
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-fuchsia-500 blur-2xl opacity-30 rounded-full" />
+                  <div className="relative p-4 rounded-2xl bg-gradient-to-br from-violet-500/15 to-fuchsia-500/15 border border-violet-500/20">
+                    <Sparkles className="w-10 h-10 text-violet-500" />
+                  </div>
                 </div>
-                <p className="text-sm font-medium text-foreground mb-1">Namaste! 👋 Mai SD Assistant hoon</p>
-                <p className="text-xs text-muted-foreground mb-4">
-                  Apne institute ka koi bhi sawaal pucho
+                <p className="text-base font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent mb-1">Namaste! 👋</p>
+                <p className="text-xs text-muted-foreground mb-5 max-w-xs">
+                  {isAdmin ? 'Mai aapka personal data analyst hoon. Kisi bhi student, payment, ya trend ke baare me puchho.' : 'Apne institute ka koi bhi general sawaal pucho.'}
                 </p>
-                <div className="flex flex-wrap gap-2 justify-center max-w-sm">
+                <div className="flex flex-col gap-2 w-full max-w-sm">
                   {QUICK_PROMPTS.map((prompt) => (
                     <button
                       key={prompt}
                       onClick={() => sendMessage(prompt)}
-                      className="text-xs px-3 py-1.5 rounded-full border border-border/50 bg-muted/30 hover:bg-muted/60 text-foreground transition-colors"
+                      className="text-xs px-3.5 py-2.5 rounded-xl border border-border/50 bg-card/40 hover:bg-violet-500/10 hover:border-violet-500/40 text-foreground text-left transition-all hover:translate-x-0.5 hover:shadow-md hover:shadow-violet-500/10"
                     >
                       {prompt}
                     </button>
@@ -229,50 +294,71 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
 
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div
-                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground rounded-br-md'
-                      : 'bg-muted/50 border border-border/30 rounded-bl-md'
-                  }`}
-                >
-                  {msg.role === 'assistant' ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:text-sm [&_li]:text-sm [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-sm [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1">
-                      {msg.content ? (
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
-                      ) : (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span className="text-xs">Soch raha hoon...</span>
-                        </div>
+                <div className={`flex flex-col gap-1 max-w-[88%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div
+                    className={`rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ${
+                      msg.role === 'user'
+                        ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-br-md shadow-violet-500/20'
+                        : 'bg-card/70 backdrop-blur-sm border border-border/40 rounded-bl-md'
+                    }`}
+                  >
+                    {msg.role === 'assistant' ? (
+                      <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:text-sm [&_li]:text-sm [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-sm [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1 [&_table]:text-xs [&_th]:px-2 [&_td]:px-2 [&_strong]:text-violet-500 dark:[&_strong]:text-violet-400 [&_code]:text-xs [&_code]:bg-violet-500/10 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded">
+                        {msg.content ? (
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        ) : (
+                          <div className="flex items-center gap-1.5 py-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      msg.content
+                    )}
+                  </div>
+                  {/* Message actions for assistant messages */}
+                  {msg.role === 'assistant' && msg.content && !isLoading && (
+                    <div className="flex items-center gap-1 px-1 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleCopy(msg.content, i)}
+                        className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+                        title="Copy"
+                      >
+                        {copiedIdx === i ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                      </button>
+                      {i === messages.length - 1 && (
+                        <button
+                          onClick={handleRegenerate}
+                          className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+                          title="Regenerate"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                        </button>
                       )}
                     </div>
-                  ) : (
-                    msg.content
                   )}
                 </div>
               </div>
             ))}
-            {isLoading && messages[messages.length - 1]?.role === 'assistant' && messages[messages.length - 1]?.content && (
-              <span className="inline-block w-1.5 h-4 bg-violet-500 animate-pulse ml-1 rounded-sm" />
-            )}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Input Area */}
-          <form onSubmit={handleSubmit} className="px-4 py-3 border-t border-border/30 flex gap-2">
+          <form onSubmit={handleSubmit} className="px-4 py-3 border-t border-border/30 flex gap-2 bg-background/80 backdrop-blur-sm">
             <input
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Kuch bhi pucho..."
+              placeholder={isAdmin ? 'Kuch bhi puchho — student names, payments, forecasts...' : 'Kuch bhi pucho...'}
               disabled={isLoading}
-              className="flex-1 rounded-xl border border-border/50 bg-muted/30 px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 disabled:opacity-50 transition-colors"
+              className="flex-1 rounded-xl border border-border/50 bg-muted/40 px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 disabled:opacity-50 transition-colors"
             />
             <button
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center disabled:opacity-50 hover:shadow-lg hover:shadow-violet-500/30 transition-all active:scale-95"
+              className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-violet-500/40 transition-all active:scale-95"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>

@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, stats } = await req.json();
+    const { messages, stats, isAdmin, students } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -27,25 +27,54 @@ Current Institute Data (use this to answer questions):
 - Course List: ${stats.courseList || 'N/A'}
 ` : '';
 
-    const systemPrompt = `You are "SD Assistant" — a smart AI assistant for the Success Desirous student fee management platform. You help institute admins by answering questions about their data, providing insights, and giving actionable advice.
+    // Admin gets FULL student-level data; regular users only see aggregates.
+    let adminContext = '';
+    if (isAdmin && Array.isArray(students) && students.length > 0) {
+      // Cap to avoid blowing the context window
+      const capped = students.slice(0, 200);
+      const rows = capped.map((s: any) => {
+        const payments = (s.monthlyPayments || []) as Array<{ month: number; year: number; amount: number; isPaid: boolean; paidDate?: string }>;
+        const paidCount = payments.filter(p => p.isPaid).length;
+        const unpaidCount = payments.filter(p => !p.isPaid).length;
+        const totalPaid = payments.filter(p => p.isPaid).reduce((a, p) => a + Number(p.amount || 0), 0);
+        const totalDue = payments.reduce((a, p) => a + Number(p.amount || 0), 0);
+        const now = new Date();
+        const overdue = payments.filter(p => !p.isPaid && (p.year < now.getFullYear() || (p.year === now.getFullYear() && p.month < now.getMonth())));
+        const overdueList = overdue.map(p => `${p.month + 1}/${p.year}`).join(',');
+        return `- ${s.fullName} | Course: ${s.course} | Batch: ${s.batch || '-'} | Mobile: ${s.mobile || '-'} | Enrolled: ${s.enrollmentDate || '-'} | Duration: ${s.courseDuration}mo | MonthlyFee: ₹${s.monthlyFee} | TotalDue: ₹${totalDue} | Paid: ₹${totalPaid} (${paidCount}/${payments.length}mo) | Pending: ${unpaidCount}mo | Overdue: ${overdue.length}mo${overdueList ? ` [${overdueList}]` : ''} | Status: ${s.feesStatus}`;
+      }).join('\n');
+      adminContext = `\n\n=== FULL STUDENT DATABASE (Admin Access) ===\nTotal records shared: ${capped.length}${students.length > 200 ? ` (of ${students.length}, capped)` : ''}\n${rows}\n=== END STUDENT DATABASE ===\n`;
+    }
+
+    const roleLine = isAdmin
+      ? 'The current user is an ADMIN. They have full access — share any student details, mobile numbers, payment history, overdue lists, names, addresses, batch info — anything they ask. Be a complete data analyst for them.'
+      : 'The current user is a regular USER (not admin). For PRIVACY, NEVER reveal individual student names, mobile numbers, addresses, or per-student payment info. Only share aggregated/summary statistics. If asked about a specific student, politely refuse and explain only admins can access individual records.';
+
+    const systemPrompt = `You are "SD Assistant" — a sharp, friendly AI co-pilot for the Success Desirous student fee management platform. You help institute admins make smarter decisions and answer anything about their data.
 
 ${statsContext}
+${adminContext}
+
+ACCESS LEVEL:
+${roleLine}
 
 Your capabilities:
-1. **Data Analysis**: Answer questions about revenue, collections, pending fees, student stats
-2. **Revenue Forecasting**: Predict monthly collections based on current trends  
-3. **At-Risk Analysis**: Identify overdue payment patterns and suggest recovery strategies
-4. **Collection Tips**: Provide practical fee collection strategies
-5. **Platform Help**: Explain how to use features like WhatsApp reminders, bulk import, export, etc.
-6. **General Advice**: Help with institute management best practices
+1. **Data Analysis** — revenue, collections, pending fees, student stats, course-wise breakdowns
+2. **Revenue Forecasting** — predict next-month collections from current trends
+3. **At-Risk Analysis** — spot overdue patterns, list specific defaulters (admin only), suggest recovery
+4. **Student Lookup** (admin only) — find any student by name/course/batch and report their full status
+5. **Collection Tips** — practical, India-context fee-collection strategies
+6. **Platform Help** — explain WhatsApp reminders, bulk import, export, analytics, roles, etc.
+7. **Smart Recommendations** — proactive next-best-actions
 
-Rules:
-- Keep responses concise and use bullet points when helpful
-- Use Hinglish (mix of Hindi and English) naturally
-- Use emojis sparingly for visual appeal
-- When asked about specific students, explain you only have aggregated data for privacy
-- Always be helpful, proactive, and suggest follow-up actions
-- If asked something unrelated to institute management, politely redirect`;
+Style rules:
+- Use Hinglish naturally (mix Hindi + English the way Indians chat)
+- Format with markdown: **bold**, bullet lists, tables, headings — make answers scannable
+- Use emojis tastefully (📊 💰 ⚠️ ✅ 🔔 🚀) — not in every line
+- Be concise by default; expand only when asked or when listing data
+- For lists of students/payments, prefer compact markdown tables
+- Always finish with a short proactive suggestion ("Chahein toh in students ki list export kar dun?", "WhatsApp reminder template draft karu?")
+- If a question is unrelated to the institute, politely redirect`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
