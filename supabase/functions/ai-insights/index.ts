@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, stats, isAdmin, students } = await req.json();
+    const { messages, stats, isAdmin, students, useTools } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -50,10 +50,15 @@ Current Institute Data (use this to answer questions):
       ? 'The current user is an ADMIN. They have full access — share any student details, mobile numbers, payment history, overdue lists, names, addresses, batch info — anything they ask. Be a complete data analyst for them.'
       : 'The current user is a regular USER (not admin). For PRIVACY, NEVER reveal individual student names, mobile numbers, addresses, or per-student payment info. Only share aggregated/summary statistics. If asked about a specific student, politely refuse and explain only admins can access individual records.';
 
+    const actionLine = isAdmin && useTools
+      ? `\n\n=== ACTION MODE (Admin) ===\nYou are an ACTION-CAPABLE AGENT. You have TOOLS to perform real work in the app — not just answer questions.\nALWAYS prefer calling a tool over guessing or describing what the user could do manually.\n- For data lookups: call read-only tools (find_student, list_overdue_students, top_defaulters, get_course_stats).\n- For actions (sending WhatsApp, marking paid, exporting, opening dialogs): call the action tool — the frontend will ask the admin to confirm before executing.\n- After tool results come back, summarize naturally in Hinglish with markdown.\n- You can chain multiple tool calls in sequence (e.g. find student first, then mark payment).\n- Use studentId from find_student / list_overdue_students results — never invent IDs.`
+      : '';
+
     const systemPrompt = `You are "SD Assistant" — a sharp, friendly AI co-pilot for the Success Desirous student fee management platform. You help institute admins make smarter decisions and answer anything about their data.
 
 ${statsContext}
 ${adminContext}
+${actionLine}
 
 ACCESS LEVEL:
 ${roleLine}
@@ -90,6 +95,21 @@ Hard rules:
 - Never output raw JSON unless explicitly asked.
 - If question is unrelated to the institute, politely redirect in 1 line.`;
 
+    const tools = (isAdmin && useTools) ? [
+      { type: "function", function: { name: "find_student", description: "Find a student by name (fuzzy), mobile, or course. Returns matching students with their IDs.", parameters: { type: "object", properties: { query: { type: "string", description: "Search term — name, mobile or course" } }, required: ["query"], additionalProperties: false } } },
+      { type: "function", function: { name: "list_overdue_students", description: "List all students with overdue (past-due unpaid) months.", parameters: { type: "object", properties: { limit: { type: "number", description: "Max records (default 20)" } }, additionalProperties: false } } },
+      { type: "function", function: { name: "top_defaulters", description: "Top N students by total overdue amount.", parameters: { type: "object", properties: { count: { type: "number", description: "How many (default 5)" } }, additionalProperties: false } } },
+      { type: "function", function: { name: "get_course_stats", description: "Course-wise breakdown: students, revenue, collected, pending.", parameters: { type: "object", properties: {}, additionalProperties: false } } },
+      { type: "function", function: { name: "send_whatsapp_reminder", description: "Send a WhatsApp fee reminder to one student. Requires admin confirmation in UI.", parameters: { type: "object", properties: { studentId: { type: "string" } }, required: ["studentId"], additionalProperties: false } } },
+      { type: "function", function: { name: "bulk_send_reminders", description: "Send WhatsApp reminders to ALL overdue students. Requires admin confirmation in UI.", parameters: { type: "object", properties: {}, additionalProperties: false } } },
+      { type: "function", function: { name: "mark_payment_paid", description: "Mark a specific monthly payment as paid for a student. Month is 0-11. Requires admin confirmation in UI.", parameters: { type: "object", properties: { studentId: { type: "string" }, month: { type: "number", description: "0=Jan ... 11=Dec" }, year: { type: "number" } }, required: ["studentId", "month", "year"], additionalProperties: false } } },
+      { type: "function", function: { name: "open_student_profile", description: "Open the payment tracker dialog for a student. Requires admin confirmation in UI.", parameters: { type: "object", properties: { studentId: { type: "string" }, view: { type: "string", enum: ["payments", "analytics"], description: "Which dialog (default payments)" } }, required: ["studentId"], additionalProperties: false } } },
+      { type: "function", function: { name: "export_data", description: "Trigger a data export (CSV/JSON/PDF). Requires admin confirmation in UI.", parameters: { type: "object", properties: { format: { type: "string", enum: ["csv", "json", "pdf"] } }, required: ["format"], additionalProperties: false } } },
+      { type: "function", function: { name: "scroll_to_section", description: "Scroll the dashboard to a section.", parameters: { type: "object", properties: { section: { type: "string", enum: ["dashboard-summary", "stats", "add-student", "students", "analytics"] } }, required: ["section"], additionalProperties: false } } },
+    ] : undefined;
+
+    const useStreaming = !tools; // when tools present, use non-streaming so we can parse tool_calls
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -102,7 +122,8 @@ Hard rules:
           { role: "system", content: systemPrompt },
           ...messages,
         ],
-        stream: true,
+        stream: useStreaming,
+        ...(tools ? { tools, tool_choice: "auto" } : {}),
       }),
     });
 
@@ -127,8 +148,15 @@ Hard rules:
       });
     }
 
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    if (useStreaming) {
+      return new Response(response.body, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
+    }
+    // Non-streaming JSON passthrough (tool-calling mode)
+    const json = await response.json();
+    return new Response(JSON.stringify(json), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("ai-insights error:", e);
