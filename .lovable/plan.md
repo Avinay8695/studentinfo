@@ -1,46 +1,92 @@
+## Plan: SD Assistant ko "Action Agent" banao (kaam bhi kare, sirf jawab nahi)
 
+Abhi AI sirf data padhke jawab deta hai. Iske baad AI **actions** bhi perform karega — jaise WhatsApp reminder bhejna, payment mark karna, student dhundhna, export trigger karna, etc. Yeh OpenAI-compatible **tool calling** se hoga (Lovable AI Gateway supports it).
 
-## Plan: WhatsApp Payment Reminders + AI-Powered Features
-
-### Feature 1: WhatsApp Payment Reminders
-
-**What it does**: Add a "Send WhatsApp Reminder" button on student cards and the notification bell's overdue list. Clicking it opens WhatsApp with a pre-filled message containing student name, pending months, and total amount.
-
-**How it works**:
-- Uses `https://wa.me/{phone}?text={message}` — no API key or backend needed
-- The student's mobile number is already stored in the database
-- Pre-formatted message in Hindi/English with student name, overdue months, and amount
-
-**Changes**:
-1. **Create `src/utils/whatsappReminder.ts`** — utility function that formats the mobile number (adds `91` country code if needed), builds a professional reminder message template, and returns the `wa.me` URL
-2. **Update `src/components/NotificationBell.tsx`** — add a WhatsApp icon button next to each overdue student entry
-3. **Update `src/components/MonthlyPaymentTracker.tsx`** — add a "Send Reminder" button in the payment tracker dialog
-4. **Update `src/components/SwipeableStudentCard.tsx`** — add WhatsApp quick action on mobile cards for students with pending fees
+Sab actions sirf **admin** ke liye. Regular users ke liye sirf read-only Q&A (jaisa hai waisa).
 
 ---
 
-### Feature 2: AI-Powered Smart Insights
+### Kya kar sakega AI (Tools)
 
-**What it does**: Add an AI assistant that analyzes student/payment data and gives actionable insights — like revenue forecasts, at-risk students, collection suggestions.
+Admin chat me likhega: *"Rahul ko WhatsApp reminder bhejo"* ya *"November ka payment mark paid kardo Priya ka"* — AI tool call karega, frontend execute karega, result chat me dikhega.
 
-**How it works**:
-- Uses Lovable AI Gateway via a Supabase Edge Function
-- A floating "AI Insights" button on the dashboard opens a panel
-- Sends aggregated stats (not raw data) to AI for analysis
-- Streams the response back with markdown rendering
+**Read-only tools (auto-execute, no confirm):**
+1. `find_student` — naam/mobile/course se student dhundo, full details return
+2. `list_overdue_students` — overdue list with mobile + pending months + amount
+3. `get_revenue_summary` — date-range wise collection/pending breakdown
+4. `get_course_stats` — course-wise students, revenue, collection rate
+5. `top_defaulters` — top N defaulters by overdue amount
 
-**Changes**:
-1. **Create edge function `supabase/functions/ai-insights/index.ts`** — accepts stats summary, calls Lovable AI Gateway with a system prompt tuned for institute analytics, streams response
-2. **Create `src/components/AIInsightsPanel.tsx`** — floating button + slide-out panel with pre-built prompt buttons ("Revenue Forecast", "At-Risk Students", "Collection Tips") and streamed AI response display
-3. **Update `src/pages/Index.tsx`** — add the AIInsightsPanel component
-4. **Update `supabase/config.toml`** — register the new edge function
+**Write/action tools (confirmation chip dikhayega chat me, admin click → execute):**
+6. `send_whatsapp_reminder` — student id se → `wa.me` URL kholo with pre-filled message (existing `whatsappReminder.ts` use)
+7. `mark_payment_paid` — student id + month + year → DB update via `updatePaymentStatus`
+8. `bulk_send_reminders` — sare overdue students ko ek-ek karke WhatsApp links list kar do
+9. `open_student_profile` — student dialog (payment tracker / analytics) khol do
+10. `export_data` — CSV/PDF export trigger karo (existing `ExportButton` logic)
+11. `scroll_to_section` — dashboard/students/analytics section pe le jao
 
 ---
 
-### Technical Details
+### Kaise kaam karega (Flow)
 
-- WhatsApp reminders use the free `wa.me` deep link — works on both mobile and desktop, no Twilio needed
-- AI insights use `LOVABLE_API_KEY` (already available) with `google/gemini-3-flash-preview` model
-- AI receives only aggregated numbers (total students, collection rate, overdue count) — no PII sent to AI
-- Streaming SSE for real-time AI response rendering
+```text
+User: "Rahul ka October payment paid mark karo"
+  ↓
+Edge function (ai-insights) → Gemini with tools schema
+  ↓
+AI returns tool_call: mark_payment_paid({studentId, month:9, year:2026})
+  ↓
+Frontend (AIChatBot) intercepts tool_call:
+  - Read-only tool → execute silently, send result back to AI → AI replies
+  - Write tool → render "Confirm action" card in chat
+      [✓ Confirm]  [✗ Cancel]
+  ↓
+On confirm → run handler from props (updatePaymentStatus, openWhatsApp, etc.)
+  ↓
+Send tool_result back → AI ka final natural-language confirmation aata hai
+```
 
+---
+
+### Changes
+
+1. **`supabase/functions/ai-insights/index.ts`**
+   - Add `tools: [...]` array with JSON schemas for all 11 tools (only when `isAdmin`)
+   - Switch from pure stream to **non-streaming first call** when tools present, then stream final text after tool results (multi-turn loop supported in same request via client round-trips)
+   - Update system prompt: "You are an action-capable agent. Prefer calling tools over guessing."
+
+2. **`src/components/AIChatBot.tsx`**
+   - Accept new props: `onMarkPayment`, `onOpenStudent`, `onExport`, `onScrollTo` (callbacks from `Index.tsx`)
+   - New `executeTool(name, args)` switch — handles all 11 tools client-side using already-available `students` data + handler props
+   - Render **ToolCallCard** in message stream:
+     - Read-only result → small collapsed "✓ Fetched data" chip
+     - Write action → "Confirm" UI with action summary, Confirm/Cancel buttons
+   - Multi-turn loop: after tool result, POST again to edge function with `tool` role messages until AI returns plain text
+
+3. **`src/pages/Index.tsx`**
+   - Pass `updatePaymentStatus`, `handleViewPayments`, `handleViewAnalytics`, `setIsBulkImportOpen` to `AIChatBot`
+   - Add small `scrollToSection(id)` helper
+
+4. **`src/utils/whatsappReminder.ts`** — already exists, reuse `getWhatsAppReminderUrl(student)`
+
+---
+
+### Safety / UX
+
+- Write actions **always** show confirm card — AI cannot silently mutate data
+- Non-admin users: tools array not sent → AI behaves like before (read-only Q&A)
+- Each tool call logged to console for debugging
+- If tool fails (e.g. student not found) → error returned to AI, AI explains in Hinglish
+- Markdown rendering + premium UI (existing) stays as-is
+
+---
+
+### Example interactions admin try kar sakta hai
+
+- "Top 5 defaulters dikhao aur sabko WhatsApp reminder bhej do"
+- "Priya Sharma ka October aur November paid mark kardo"
+- "Yoga course ke sare students ka revenue kitna hai?"
+- "Mujhe Rahul ka payment tracker kholke do"
+- "Pure data ka CSV export nikalo"
+
+Approve karo toh implement kar deta hoon.
