@@ -1,15 +1,16 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { Bot, Send, Loader2, Trash2, Sparkles, Copy, RefreshCw, Check, Shield, User as UserIcon } from 'lucide-react';
+import { Bot, Send, Loader2, Trash2, Sparkles, Copy, RefreshCw, Check, Shield, User as UserIcon, Wrench, X, Zap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
 import type { Student } from '@/types/student';
+import { executeTool, isWriteTool, summarizeAction, type ToolContext } from '@/utils/aiTools';
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
+type ChatMessage =
+  | { role: 'user'; content: string }
+  | { role: 'assistant'; content: string; tool_calls?: Array<{ id: string; name: string; args: any; status: 'pending' | 'confirmed' | 'cancelled' | 'done' | 'error'; result?: any }> }
+  | { role: 'tool'; tool_call_id: string; name: string; content: string };
 
 interface AIChatBotProps {
   stats: {
@@ -25,6 +26,9 @@ interface AIChatBotProps {
   courseList?: string;
   isAdmin?: boolean;
   students?: Student[];
+  onMarkPayment?: ToolContext['updatePaymentStatus'];
+  onOpenStudentPayments?: (student: Student) => void;
+  onOpenStudentAnalytics?: (student: Student) => void;
 }
 
 const ADMIN_PROMPTS = [
@@ -43,14 +47,23 @@ const USER_PROMPTS = [
   '💡 Best practices for fee collection',
 ];
 
-export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCourses, courseList, isAdmin = false, students = [] }: AIChatBotProps) {
+export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCourses, courseList, isAdmin = false, students = [], onMarkPayment, onOpenStudentPayments, onOpenStudentAnalytics }: AIChatBotProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const toolCtx: ToolContext = {
+    students,
+    updatePaymentStatus: onMarkPayment || (async () => { throw new Error('Not configured'); }),
+    openStudentPayments: (s) => { onOpenStudentPayments?.(s); setIsOpen(false); },
+    openStudentAnalytics: (s) => { onOpenStudentAnalytics?.(s); setIsOpen(false); },
+  };
+
+  const useTools = isAdmin && !!onMarkPayment;
 
   const QUICK_PROMPTS = isAdmin ? ADMIN_PROMPTS : USER_PROMPTS;
 
@@ -86,27 +99,32 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
     };
   }, [stats, overdueStudents, totalOverdueMonths, activeCourses, courseList]);
 
-  const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim() || isLoading) return;
+  // Convert local chat messages to OpenAI-style messages for the API
+  const toApiMessages = (msgs: ChatMessage[]) => msgs.map(m => {
+    if (m.role === 'tool') return { role: 'tool', tool_call_id: m.tool_call_id, name: m.name, content: m.content };
+    if (m.role === 'assistant' && m.tool_calls && m.tool_calls.length > 0) {
+      return {
+        role: 'assistant',
+        content: m.content || '',
+        tool_calls: m.tool_calls.map(tc => ({ id: tc.id, type: 'function', function: { name: tc.name, arguments: JSON.stringify(tc.args) } })),
+      };
+    }
+    return { role: m.role, content: (m as any).content };
+  });
 
-    const userMsg: Message = { role: 'user', content: text.trim() };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-insights`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
-          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-          stats: buildStats(),
-          isAdmin,
-          students: isAdmin ? students.map(s => ({
+  const callApi = useCallback(async (msgs: ChatMessage[], stream: boolean) => {
+    return fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-insights`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify({
+        messages: toApiMessages(msgs),
+        stats: buildStats(),
+        isAdmin,
+        useTools: stream ? false : useTools,
+        students: isAdmin ? students.map(s => ({
             id: s.id,
             fullName: s.fullName,
             course: s.course,
@@ -118,68 +136,108 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
             feesStatus: s.feesStatus,
             monthlyPayments: s.monthlyPayments,
           })) : undefined,
-        }),
-      });
+      }),
+    });
+  }, [buildStats, isAdmin, students, useTools]);
 
-      if (resp.status === 429) { toast.error('Rate limit! Thoda wait karo.'); setIsLoading(false); return; }
-      if (resp.status === 402) { toast.error('AI credits khatam. Funds add karo.'); setIsLoading(false); return; }
-      if (!resp.ok || !resp.body) { toast.error('AI unavailable. Try again.'); setIsLoading(false); return; }
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = '';
-      let fullText = '';
-      let streamDone = false;
-
-      // Add empty assistant message
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-
-      while (!streamDone) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '') continue;
-          if (!line.startsWith('data: ')) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') { streamDone = true; break; }
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              fullText += content;
-              setMessages(prev => prev.map((m, i) => i === prev.length - 1 ? { ...m, content: fullText } : m));
-            }
-          } catch {
-            textBuffer = line + '\n' + textBuffer;
-            break;
+  const streamAssistantText = useCallback(async (resp: Response) => {
+    if (!resp.body) return;
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let textBuffer = '';
+    let fullText = '';
+    let streamDone = false;
+    setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+    while (!streamDone) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      textBuffer += decoder.decode(value, { stream: true });
+      let nl: number;
+      while ((nl = textBuffer.indexOf('\n')) !== -1) {
+        let line = textBuffer.slice(0, nl);
+        textBuffer = textBuffer.slice(nl + 1);
+        if (line.endsWith('\r')) line = line.slice(0, -1);
+        if (line.startsWith(':') || line.trim() === '') continue;
+        if (!line.startsWith('data: ')) continue;
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === '[DONE]') { streamDone = true; break; }
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+          if (content) {
+            fullText += content;
+            setMessages(prev => prev.map((m, i) => i === prev.length - 1 && m.role === 'assistant' ? { ...m, content: fullText } : m));
           }
+        } catch {
+          textBuffer = line + '\n' + textBuffer;
+          break;
         }
       }
+    }
+  }, []);
 
-      // Final flush
-      if (textBuffer.trim()) {
-        for (let raw of textBuffer.split('\n')) {
-          if (!raw) continue;
-          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
-          if (raw.startsWith(':') || raw.trim() === '') continue;
-          if (!raw.startsWith('data: ')) continue;
-          const jsonStr = raw.slice(6).trim();
-          if (jsonStr === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              fullText += content;
-              setMessages(prev => prev.map((m, i) => i === prev.length - 1 ? { ...m, content: fullText } : m));
-            }
-          } catch { /* ignore */ }
+  // Run the conversation loop with tool support. Returns when AI produces final text or a pending write tool.
+  const runConversation = useCallback(async (initialMessages: ChatMessage[]) => {
+    let working = initialMessages;
+    setIsLoading(true);
+    try {
+      // Up to 8 tool round-trips
+      for (let step = 0; step < 8; step++) {
+        if (!useTools) {
+          // Pure streaming
+          const resp = await callApi(working, true);
+          if (resp.status === 429) { toast.error('Rate limit! Thoda wait karo.'); return; }
+          if (resp.status === 402) { toast.error('AI credits khatam.'); return; }
+          if (!resp.ok) { toast.error('AI unavailable.'); return; }
+          await streamAssistantText(resp);
+          return;
         }
+
+        // Tool-calling JSON mode
+        const resp = await callApi(working, false);
+        if (resp.status === 429) { toast.error('Rate limit! Thoda wait karo.'); return; }
+        if (resp.status === 402) { toast.error('AI credits khatam.'); return; }
+        if (!resp.ok) { toast.error('AI unavailable.'); return; }
+        const data = await resp.json();
+        const choice = data.choices?.[0];
+        const msg = choice?.message;
+        const rawToolCalls = msg?.tool_calls as Array<any> | undefined;
+        const content: string = msg?.content || '';
+
+        if (!rawToolCalls || rawToolCalls.length === 0) {
+          // Final answer
+          const assistantMsg: ChatMessage = { role: 'assistant', content };
+          working = [...working, assistantMsg];
+          setMessages(working);
+          return;
+        }
+
+        // Parse tool calls
+        const toolCalls = rawToolCalls.map((tc: any) => {
+          let args: any = {};
+          try { args = typeof tc.function?.arguments === 'string' ? JSON.parse(tc.function.arguments || '{}') : (tc.function?.arguments || {}); } catch { args = {}; }
+          return { id: tc.id, name: tc.function?.name, args, status: 'pending' as const };
+        });
+
+        const writeTools = toolCalls.filter(tc => isWriteTool(tc.name));
+        const readTools = toolCalls.filter(tc => !isWriteTool(tc.name));
+
+        if (writeTools.length > 0) {
+          // Surface write tools for user confirmation. Stop the loop.
+          const assistantMsg: ChatMessage = { role: 'assistant', content, tool_calls: toolCalls };
+          working = [...working, assistantMsg];
+          setMessages(working);
+          return;
+        }
+
+        // Auto-execute read-only tools, then continue loop
+        const assistantMsg: ChatMessage = { role: 'assistant', content, tool_calls: toolCalls.map(t => ({ ...t, status: 'done' as const })) };
+        working = [...working, assistantMsg];
+        for (const tc of readTools) {
+          const result = await executeTool(tc.name, tc.args, toolCtx);
+          working = [...working, { role: 'tool', tool_call_id: tc.id, name: tc.name, content: JSON.stringify(result) }];
+        }
+        setMessages(working);
       }
     } catch (e) {
       console.error('AI chat error:', e);
@@ -187,7 +245,43 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading, buildStats, isAdmin, students]);
+  }, [callApi, streamAssistantText, useTools, toolCtx]);
+
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || isLoading) return;
+    const userMsg: ChatMessage = { role: 'user', content: text.trim() };
+    const newMessages: ChatMessage[] = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput('');
+    await runConversation(newMessages);
+  }, [messages, isLoading, runConversation]);
+
+  // Confirm / cancel a pending tool call
+  const handleConfirmTool = useCallback(async (msgIdx: number, callId: string, confirm: boolean) => {
+    const target = messages[msgIdx];
+    if (!target || target.role !== 'assistant' || !target.tool_calls) return;
+    const tc = target.tool_calls.find(t => t.id === callId);
+    if (!tc || tc.status !== 'pending') return;
+
+    let updated = [...messages];
+    if (!confirm) {
+      const newCalls = target.tool_calls.map(t => t.id === callId ? { ...t, status: 'cancelled' as const } : t);
+      updated[msgIdx] = { ...target, tool_calls: newCalls };
+      updated.push({ role: 'tool', tool_call_id: callId, name: tc.name, content: JSON.stringify({ ok: false, error: 'User cancelled the action' }) });
+    } else {
+      const result = await executeTool(tc.name, tc.args, toolCtx);
+      const newCalls = target.tool_calls.map(t => t.id === callId ? { ...t, status: result.ok ? 'done' as const : 'error' as const, result } : t);
+      updated[msgIdx] = { ...target, tool_calls: newCalls };
+      updated.push({ role: 'tool', tool_call_id: callId, name: tc.name, content: JSON.stringify(result) });
+    }
+    setMessages(updated);
+
+    // If all pending calls in this message are resolved, continue conversation
+    const stillPending = (updated[msgIdx] as any).tool_calls?.some((t: any) => t.status === 'pending');
+    if (!stillPending) {
+      await runConversation(updated);
+    }
+  }, [messages, runConversation, toolCtx]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,7 +300,7 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
     const lastUserIdx = [...messages].reverse().findIndex(m => m.role === 'user');
     if (lastUserIdx === -1) return;
     const realIdx = messages.length - 1 - lastUserIdx;
-    const lastUserMsg = messages[realIdx];
+    const lastUserMsg = messages[realIdx] as { role: 'user'; content: string };
     setMessages(messages.slice(0, realIdx));
     setTimeout(() => sendMessage(lastUserMsg.content), 50);
   };
