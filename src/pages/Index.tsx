@@ -295,6 +295,9 @@ const Index = () => {
           courseList={[...new Set(allStudents.map(s => s.course))].join(', ')}
           isAdmin={isAdmin}
           students={allStudents}
+          onMarkPayment={updatePaymentStatus}
+          onOpenStudentPayments={handleViewPayments}
+          onOpenStudentAnalytics={handleViewAnalytics}
         />
       )}
 
