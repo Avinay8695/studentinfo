@@ -387,9 +387,12 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
               </div>
             )}
 
-            {messages.map((msg, i) => (
+            {messages.map((msg, i) => {
+              if (msg.role === 'tool') return null;
+              return (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`flex flex-col gap-1 max-w-[88%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  {msg.role === 'assistant' && (msg.content || !msg.tool_calls?.length) && (
                   <div
                     className={`rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ${
                       msg.role === 'user'
@@ -467,9 +470,62 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
                         )}
                       </div>
                     ) : (
-                      msg.content
+                      (msg as any).content
                     )}
                   </div>
+                  )}
+                  {/* Tool calls UI */}
+                  {msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0 && (
+                    <div className="flex flex-col gap-1.5 w-full">
+                      {msg.tool_calls.map((tc) => {
+                        const isWrite = isWriteTool(tc.name);
+                        if (!isWrite) {
+                          return (
+                            <div key={tc.id} className="flex items-center gap-2 text-[11px] px-2.5 py-1.5 rounded-lg bg-violet-500/5 border border-violet-500/15 text-muted-foreground">
+                              <Wrench className="w-3 h-3 text-violet-500" />
+                              <span className="font-mono">{tc.name}</span>
+                              {tc.status === 'done' && <Check className="w-3 h-3 text-emerald-500 ml-auto" />}
+                            </div>
+                          );
+                        }
+                        return (
+                          <div key={tc.id} className="rounded-xl border border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/5 p-3 shadow-sm">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Zap className="w-4 h-4 text-violet-500" />
+                              <span className="text-xs font-bold text-violet-600 dark:text-violet-300 uppercase tracking-wide">Action Request</span>
+                              {tc.status === 'done' && <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 font-semibold">DONE</span>}
+                              {tc.status === 'cancelled' && <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">CANCELLED</span>}
+                              {tc.status === 'error' && <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive font-semibold">ERROR</span>}
+                            </div>
+                            <div className="text-sm text-foreground mb-3">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ p: ({children}) => <span>{children}</span>, strong: ({children}) => <strong className="text-violet-600 dark:text-violet-300">{children}</strong> }}>
+                                {summarizeAction(tc.name, tc.args, toolCtx)}
+                              </ReactMarkdown>
+                            </div>
+                            {tc.status === 'pending' && (
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleConfirmTool(i, tc.id, true)}
+                                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white text-xs font-semibold hover:shadow-lg hover:shadow-violet-500/30 transition-all active:scale-95"
+                                >
+                                  <Check className="w-3.5 h-3.5" /> Confirm
+                                </button>
+                                <button
+                                  onClick={() => handleConfirmTool(i, tc.id, false)}
+                                  className="px-3 py-1.5 rounded-lg bg-muted hover:bg-destructive/10 text-muted-foreground hover:text-destructive text-xs font-semibold transition-colors"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                            {tc.status === 'error' && tc.result?.error && (
+                              <p className="text-[11px] text-destructive mt-1">{tc.result.error}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   {/* Message actions for assistant messages */}
                   {msg.role === 'assistant' && msg.content && !isLoading && (
                     <div className="flex items-center gap-1 px-1 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity">
@@ -493,7 +549,8 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
 
