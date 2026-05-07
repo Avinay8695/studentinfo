@@ -392,7 +392,7 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
               return (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`flex flex-col gap-1 max-w-[88%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                  {msg.role === 'assistant' && (msg.content || !msg.tool_calls?.length) && (
+                  {(msg.role === 'user' || (msg.role === 'assistant' && (msg.content || !msg.tool_calls?.length))) && (
                   <div
                     className={`rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ${
                       msg.role === 'user'
