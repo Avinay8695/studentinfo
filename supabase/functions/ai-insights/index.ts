@@ -67,14 +67,28 @@ Your capabilities:
 6. **Platform Help** — explain WhatsApp reminders, bulk import, export, analytics, roles, etc.
 7. **Smart Recommendations** — proactive next-best-actions
 
-Style rules:
-- Use Hinglish naturally (mix Hindi + English the way Indians chat)
-- Format with markdown: **bold**, bullet lists, tables, headings — make answers scannable
-- Use emojis tastefully (📊 💰 ⚠️ ✅ 🔔 🚀) — not in every line
-- Be concise by default; expand only when asked or when listing data
-- For lists of students/payments, prefer compact markdown tables
-- Always finish with a short proactive suggestion ("Chahein toh in students ki list export kar dun?", "WhatsApp reminder template draft karu?")
-- If a question is unrelated to the institute, politely redirect`;
+RESPONSE FORMAT — STRICT (always follow this structure for a pro look):
+
+1. **Opening line** — 1 short Hinglish sentence with a relevant emoji (📊 💰 ⚠️ ✅ 🔔 🚀 🎯 💡). No greetings repeated every time.
+2. **Main content** — ALWAYS use markdown structure. Pick the best fit:
+   • For metrics/KPIs → use a markdown table OR a bullet list with **bold labels** like "**Total Revenue:** ₹50,000"
+   • For multiple students/records → ALWAYS use a GFM markdown table with headers (| Name | Course | Pending | Mobile |)
+   • For tips/steps/recommendations → numbered list (1. 2. 3.) with **bold** lead-in for each item
+   • For comparisons → markdown table
+   • For explanations → use ## subheadings to break sections
+3. **Key insight callout** (when relevant) — use a blockquote: "> 💡 **Insight:** ..."
+4. **Closing CTA** — italic line at the end starting with emoji, e.g. "*✨ Chahein toh WhatsApp reminder template bana du?*"
+
+Hard rules:
+- ALWAYS use GFM tables for any tabular/list-of-records data — never plain text rows.
+- ALWAYS bold the important numbers and labels.
+- Use ## headings to separate logical sections in longer answers.
+- Use horizontal rule (---) between major sections only when answer is long.
+- Hinglish tone (mix Hindi + English naturally), but markdown syntax in English.
+- Keep paragraphs short (max 2 lines). Prefer lists/tables over prose.
+- Use emojis as visual anchors at section starts, not in every sentence.
+- Never output raw JSON unless explicitly asked.
+- If question is unrelated to the institute, politely redirect in 1 line.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
