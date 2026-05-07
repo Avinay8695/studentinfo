@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Bot, Send, Loader2, Trash2, Sparkles, Copy, RefreshCw, Check, Shield, User as UserIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
 import type { Student } from '@/types/student';
 
@@ -303,9 +304,66 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
                     }`}
                   >
                     {msg.role === 'assistant' ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:text-sm [&_li]:text-sm [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-sm [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1 [&_table]:text-xs [&_th]:px-2 [&_td]:px-2 [&_strong]:text-violet-500 dark:[&_strong]:text-violet-400 [&_code]:text-xs [&_code]:bg-violet-500/10 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded">
+                      <div className="ai-markdown max-w-none">
                         {msg.content ? (
-                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              h1: ({ children }) => (
+                                <h1 className="text-base font-bold mt-3 mb-2 pb-1 border-b border-violet-500/20 bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">{children}</h1>
+                              ),
+                              h2: ({ children }) => (
+                                <h2 className="text-sm font-bold mt-3 mb-1.5 flex items-center gap-1.5 text-violet-500 dark:text-violet-400">
+                                  <span className="inline-block w-1 h-4 rounded-full bg-gradient-to-b from-violet-500 to-fuchsia-500" />
+                                  {children}
+                                </h2>
+                              ),
+                              h3: ({ children }) => (
+                                <h3 className="text-sm font-semibold mt-2 mb-1 text-foreground/90">{children}</h3>
+                              ),
+                              p: ({ children }) => <p className="text-sm leading-relaxed my-1.5">{children}</p>,
+                              ul: ({ children }) => <ul className="my-1.5 space-y-1 pl-1 list-none">{children}</ul>,
+                              ol: ({ children }) => <ol className="my-1.5 space-y-1 pl-5 list-decimal marker:text-violet-500 marker:font-bold">{children}</ol>,
+                              li: ({ children, ...props }) => {
+                                const isOrdered = (props as any).ordered;
+                                if (isOrdered) return <li className="text-sm pl-1">{children}</li>;
+                                return (
+                                  <li className="text-sm flex gap-2 items-start">
+                                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 shrink-0" />
+                                    <span className="flex-1">{children}</span>
+                                  </li>
+                                );
+                              },
+                              strong: ({ children }) => <strong className="font-semibold text-violet-600 dark:text-violet-300">{children}</strong>,
+                              em: ({ children }) => <em className="text-fuchsia-500 dark:text-fuchsia-400 not-italic font-medium">{children}</em>,
+                              code: ({ children, className }) => {
+                                const isBlock = className?.includes('language-');
+                                if (isBlock) {
+                                  return (
+                                    <code className="block bg-zinc-900 dark:bg-black/60 text-emerald-300 text-xs p-3 rounded-lg my-2 overflow-x-auto font-mono border border-violet-500/20">{children}</code>
+                                  );
+                                }
+                                return <code className="text-xs bg-violet-500/10 text-violet-600 dark:text-violet-300 px-1.5 py-0.5 rounded font-mono border border-violet-500/15">{children}</code>;
+                              },
+                              pre: ({ children }) => <pre className="my-2">{children}</pre>,
+                              blockquote: ({ children }) => (
+                                <blockquote className="my-2 pl-3 border-l-2 border-violet-500/50 bg-violet-500/5 py-1.5 pr-2 rounded-r-md text-sm italic text-foreground/80">{children}</blockquote>
+                              ),
+                              table: ({ children }) => (
+                                <div className="my-2 overflow-x-auto rounded-lg border border-violet-500/20">
+                                  <table className="w-full text-xs border-collapse">{children}</table>
+                                </div>
+                              ),
+                              thead: ({ children }) => <thead className="bg-gradient-to-r from-violet-500/15 to-fuchsia-500/10">{children}</thead>,
+                              th: ({ children }) => <th className="px-2.5 py-1.5 text-left font-semibold text-violet-600 dark:text-violet-300 border-b border-violet-500/20">{children}</th>,
+                              td: ({ children }) => <td className="px-2.5 py-1.5 border-b border-border/30">{children}</td>,
+                              tr: ({ children }) => <tr className="hover:bg-violet-500/5 transition-colors">{children}</tr>,
+                              hr: () => <hr className="my-3 border-0 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />,
+                              a: ({ children, href }) => (
+                                <a href={href} target="_blank" rel="noopener noreferrer" className="text-violet-500 hover:text-fuchsia-500 underline underline-offset-2 decoration-violet-500/40">{children}</a>
+                              ),
+                            }}
+                          >{msg.content}</ReactMarkdown>
                         ) : (
                           <div className="flex items-center gap-1.5 py-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '0ms' }} />
