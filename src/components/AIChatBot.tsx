@@ -310,19 +310,30 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
       {/* Floating AI Chat Button — Premium glow */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 group"
+        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 group outline-none"
         aria-label="Open AI Chat"
       >
-        {/* Animated glow ring */}
-        <span className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-purple-600 blur-xl opacity-60 group-hover:opacity-90 transition-opacity animate-pulse" />
-        {/* Rotating border gradient */}
-        <span className="absolute -inset-[2px] rounded-2xl bg-[conic-gradient(from_0deg,#a855f7,#ec4899,#8b5cf6,#a855f7)] opacity-80 group-hover:opacity-100" style={{ animation: 'spin 4s linear infinite' }} />
-        <span className="relative flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-2xl shadow-violet-500/40 group-hover:scale-105 transition-all duration-300">
-          <Bot className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" />
-          {/* Online dot */}
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-violet-700 animate-pulse" />
-          {/* Sparkle */}
-          <Sparkles className="absolute -top-1 -right-1 w-3 h-3 text-yellow-300 animate-pulse" />
+        {/* Soft ambient halo */}
+        <span className="absolute -inset-3 rounded-full bg-violet-500/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <span className="relative flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-b from-slate-800 to-slate-950 dark:from-slate-700 dark:to-slate-900 text-white ring-1 ring-white/10 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)] group-hover:shadow-[0_14px_40px_-10px_rgba(139,92,246,0.45)] transition-all duration-300 group-hover:-translate-y-0.5">
+          {/* Inner highlight */}
+          <span className="absolute inset-0 rounded-full bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+          {/* AI monogram mark */}
+          <svg viewBox="0 0 24 24" className="relative w-6 h-6 md:w-7 md:h-7" fill="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="aiMarkGrad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#c4b5fd" />
+                <stop offset="100%" stopColor="#f0abfc" />
+              </linearGradient>
+            </defs>
+            <path d="M12 2.5l1.85 5.2a4 4 0 0 0 2.45 2.45L21.5 12l-5.2 1.85a4 4 0 0 0-2.45 2.45L12 21.5l-1.85-5.2a4 4 0 0 0-2.45-2.45L2.5 12l5.2-1.85a4 4 0 0 0 2.45-2.45L12 2.5z" fill="url(#aiMarkGrad)" />
+            <circle cx="19" cy="5" r="1.2" fill="#fde68a" />
+          </svg>
+          {/* Online status — subtle */}
+          <span className="absolute bottom-0.5 right-0.5 flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-900" />
+          </span>
         </span>
       </button>
 
