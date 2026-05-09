@@ -94,8 +94,8 @@ export function Header({ students = [], onViewPayments, onStudentSelect }: Heade
         <div className={`absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-white/5 transition-opacity duration-500 ${scrolled ? 'opacity-0' : 'opacity-100'}`} />
 
         {/* Content */}
-        <div className="relative z-10 px-3 sm:px-6">
-          <div className={`container max-w-7xl mx-auto transition-all duration-500 ${scrolled ? 'py-1.5 sm:py-2' : 'py-3 sm:py-4 lg:py-5'}`}>
+        <div className="relative z-10 px-3 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className={`w-full mx-auto transition-all duration-500 ${scrolled ? 'py-1.5 sm:py-2' : 'py-3 sm:py-4 lg:py-5'}`}>
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               
               {/* Logo + Branding */}

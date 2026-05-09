@@ -22,8 +22,8 @@ export function Footer() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-white/5" />
         </div>
 
-        <div className="relative z-10 px-3 sm:px-6">
-          <div className="container max-w-7xl mx-auto py-4 sm:py-8">
+        <div className="relative z-10 px-3 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="w-full mx-auto py-4 sm:py-8">
             <div className="flex flex-col gap-3 sm:gap-5">
               
               {/* Branding + Feature pills - single row on mobile */}

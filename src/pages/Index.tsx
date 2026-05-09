@@ -136,7 +136,7 @@ const Index = () => {
       {/* Section Navigation */}
       <SectionNav sections={defaultSections} />
       
-      <main className="flex-1 w-full max-w-full mx-auto px-3 sm:px-4 lg:px-8 xl:px-12 py-4 sm:py-6 lg:py-10 pb-24 md:pb-10 relative z-10 stagger-children">
+      <main className="flex-1 w-full max-w-full mx-auto px-3 sm:px-4 lg:px-8 xl:px-12 2xl:px-16 py-4 sm:py-6 lg:py-10 pb-24 md:pb-10 relative z-10 stagger-children">
         {/* Dashboard Summary */}
         <div id="dashboard-summary" className="min-h-[50px]">
           {!studentsLoading && stats.total > 0 && (
