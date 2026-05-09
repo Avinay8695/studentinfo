@@ -343,7 +343,7 @@ export default function AuditLogs() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 sm:py-8">
+        <main className="flex-1 w-full mx-auto px-3 sm:px-4 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8">
           <AuditLogsSkeleton />
         </main>
         <Footer />
@@ -429,7 +429,7 @@ export default function AuditLogs() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
-      <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 sm:py-8">
+      <main className="flex-1 w-full mx-auto px-3 sm:px-4 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8">
         {/* Back Button */}
         <Button 
           variant="ghost" size="sm" onClick={() => navigate('/')}
