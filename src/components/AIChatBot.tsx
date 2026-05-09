@@ -68,12 +68,12 @@ export function AIChatBot({ stats, overdueStudents, totalOverdueMonths, activeCo
   const QUICK_PROMPTS = isAdmin ? ADMIN_PROMPTS : USER_PROMPTS;
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (isOpen) scrollToBottom();
+  }, [messages, isOpen]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
