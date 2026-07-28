@@ -10,210 +10,20 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
-      audit_logs: {
-        Row: {
-          action_type: string
-          created_at: string
-          details: Json | null
-          entity_id: string | null
-          entity_type: string
-          id: string
-          performed_by: string | null
-          performed_by_name: string
-        }
-        Insert: {
-          action_type: string
-          created_at?: string
-          details?: Json | null
-          entity_id?: string | null
-          entity_type: string
-          id?: string
-          performed_by?: string | null
-          performed_by_name: string
-        }
-        Update: {
-          action_type?: string
-          created_at?: string
-          details?: Json | null
-          entity_id?: string | null
-          entity_type?: string
-          id?: string
-          performed_by?: string | null
-          performed_by_name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "audit_logs_performed_by_fkey"
-            columns: ["performed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      monthly_payments: {
-        Row: {
-          amount: number
-          created_at: string
-          id: string
-          is_paid: boolean
-          month: number
-          paid_date: string | null
-          student_id: string
-          year: number
-        }
-        Insert: {
-          amount?: number
-          created_at?: string
-          id?: string
-          is_paid?: boolean
-          month: number
-          paid_date?: string | null
-          student_id: string
-          year: number
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          id?: string
-          is_paid?: boolean
-          month?: number
-          paid_date?: string | null
-          student_id?: string
-          year?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "monthly_payments_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          created_at: string
-          email: string | null
-          full_name: string | null
-          id: string
-          is_approved: boolean
-          is_banned: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id?: string
-          is_approved?: boolean
-          is_banned?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id?: string
-          is_approved?: boolean
-          is_banned?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      students: {
-        Row: {
-          batch: string | null
-          course: string
-          created_at: string
-          deleted_at: string | null
-          duration_months: number
-          enrollment_date: string | null
-          fees_amount: number
-          fees_status: string
-          full_name: string
-          id: string
-          mobile_number: string | null
-          monthly_fee: number
-          updated_at: string
-        }
-        Insert: {
-          batch?: string | null
-          course: string
-          created_at?: string
-          deleted_at?: string | null
-          duration_months?: number
-          enrollment_date?: string | null
-          fees_amount?: number
-          fees_status?: string
-          full_name: string
-          id?: string
-          mobile_number?: string | null
-          monthly_fee?: number
-          updated_at?: string
-        }
-        Update: {
-          batch?: string | null
-          course?: string
-          created_at?: string
-          deleted_at?: string | null
-          duration_months?: number
-          enrollment_date?: string | null
-          fees_amount?: number
-          fees_status?: string
-          full_name?: string
-          id?: string
-          mobile_number?: string | null
-          monthly_fee?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      check_email_exists: { Args: { _email: string }; Returns: boolean }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "user"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -340,8 +150,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "user"],
-    },
+    Enums: {},
   },
 } as const
