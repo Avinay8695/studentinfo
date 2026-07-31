@@ -35,7 +35,15 @@ function RecoveryRedirectHandler() {
 function ScrollToTopOnNavigate() {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0 });
+    const toTop = () => window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    toTop();
+    const raf = requestAnimationFrame(toTop);
+    // Content loads async (queries, images) and can shift the scroll position
+    const timers = [60, 250, 600].map((ms) => window.setTimeout(toTop, ms));
+    return () => {
+      cancelAnimationFrame(raf);
+      timers.forEach(clearTimeout);
+    };
   }, [pathname]);
   return null;
 }
@@ -47,7 +55,10 @@ function DisableScrollRestoration() {
       window.history.scrollRestoration = 'manual';
       // Force top on initial mount (covers hard refresh)
       window.scrollTo({ top: 0, left: 0 });
+      const onLoad = () => window.scrollTo({ top: 0, left: 0 });
+      window.addEventListener('load', onLoad);
       return () => {
+        window.removeEventListener('load', onLoad);
         window.history.scrollRestoration = prev;
       };
     }
