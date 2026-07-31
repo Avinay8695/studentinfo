@@ -683,3 +683,12 @@
 .stagger-children > *:nth-child(4) { animation-delay: 0.24s; }
 .stagger-children > *:nth-child(5) { animation-delay: 0.32s; }
 .stagger-children > *:nth-child(6) { animation-delay: 0.40s; }
+.stagger-children > *:nth-child(n+7) { animation-delay: 0.48s; }
+
+/* Never leave content permanently invisible */
+@media (prefers-reduced-motion: reduce) {
+  .stagger-children > * {
+    opacity: 1;
+    animation: none;
+  }
+}
